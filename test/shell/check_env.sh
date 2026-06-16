@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Suite de testes de shell — IT-001 a IT-020, IT-086, IT-087, IT-090 a IT-092
+# Suite de testes de shell — IT-001 a IT-020, IT-086, IT-087, IT-090 a IT-094
 # Uso: bash test/shell/check_env.sh
 set -euo pipefail
 
@@ -328,6 +328,86 @@ if command -v vim > /dev/null 2>&1; then
   fi
 else
   warn "IT-092e: vim ausente — pulei a checagem de source do exemplo"
+fi
+
+# ── IT-093: carga FUNCIONAL do override local (cadeia real vimrc_example) ─────
+echo ""
+echo "── IT-093: override local carrega de fato (vimrc_example) ──────────────"
+
+# Cria fixtures reais em ~/.vim_runtime e sobe o Vim pela mesma cadeia que o
+# install.sh dá ao usuário. PULA se já existir config local — não sobrescreve
+# dado do usuário (my_configs.vim/ são gitignored e podem ser dele).
+_LF="$REPO_ROOT/my_configs.vim"
+_LD="$REPO_ROOT/my_configs"
+if [ -e "$_LF" ] || [ -e "$_LD" ]; then
+  warn "IT-093: já existe my_configs local — pulei testes funcionais (não sobrescrevo)"
+elif ! command -v vim > /dev/null 2>&1; then
+  warn "IT-093: vim ausente — pulei testes funcionais"
+else
+  # Arquivo único: define marcador e SOBRESCREVE um valor que configs.vim já setou
+  printf 'let g:tt_single = 1\nlet g:claude_code_split_ratio = 0.99\n' > "$_LF"
+  # Pasta: 01 carrega antes de 02; ambos setam g:tt_order → o último (02) vence
+  mkdir -p "$_LD"
+  printf "let g:tt_glob = 1\nlet g:tt_order = 'first'\n"  > "$_LD/01_first.vim"
+  printf "let g:tt_order = 'second'\n"                    > "$_LD/02_second.vim"
+
+  # Comando numa linha só: continuação com '\' não vale em argumento -c do Vim.
+  _cmd='call writefile(["RESULT single=".get(g:,"tt_single",0)." glob=".get(g:,"tt_glob",0)." order=".get(g:,"tt_order","none")." ratio=".printf("%.2f",get(g:,"claude_code_split_ratio",-1))], "/dev/stderr")'
+  # g:copilot_chat_test_mode evita o device-auth input() que trava headless.
+  _out=$(timeout 30 vim -N -u "$REPO_ROOT/vimrc_example" -i NONE -es \
+    --cmd "let g:copilot_chat_test_mode = 1" \
+    -c "$_cmd" \
+    -c 'qa!' < /dev/null 2>&1) || true
+
+  # Limpa as fixtures imediatamente (antes das asserções)
+  rm -f "$_LF"; rm -rf "$_LD"
+
+  if ! echo "$_out" | grep -q "RESULT "; then
+    fail "IT-093: Vim não produziu resultado (cadeia não carregou?): $_out"
+  else
+    echo "$_out" | grep -q "single=1" \
+      && pass "IT-093a: my_configs.vim (arquivo único) carrega" \
+      || fail "IT-093a: my_configs.vim não carregou — $_out"
+    echo "$_out" | grep -q "glob=1" \
+      && pass "IT-093b: my_configs/*.vim (pasta) carrega" \
+      || fail "IT-093b: my_configs/ não carregou — $_out"
+    echo "$_out" | grep -q "order=second" \
+      && pass "IT-093c: ordem alfabética — 02 vence 01" \
+      || fail "IT-093c: ordem de carga errada — $_out"
+    echo "$_out" | grep -q "ratio=0.99" \
+      && pass "IT-093d: override local vence configs.vim (0.4 -> 0.99)" \
+      || fail "IT-093d: override não venceu configs.vim — $_out"
+  fi
+fi
+
+# ── IT-094: doc do exemplo e gitignore de subarquivo ─────────────────────────
+echo ""
+echo "── IT-094: doc do exemplo e ignore de subarquivo ───────────────────────"
+
+# IT-094a: o guia "fica local vs. abre PR" continua no exemplo
+if grep -qi "abre.*pr\|abra um pr\|abre um pr" "$REPO_ROOT/my_configs.vim.example" \
+   && grep -qi "fica local" "$REPO_ROOT/my_configs.vim.example"; then
+  pass "IT-094a: .example mantém o guia local-vs-PR"
+else
+  fail "IT-094a: guia local-vs-PR sumiu do .example"
+fi
+
+# IT-094b: o comando de ativação (cp do exemplo) está documentado
+if grep -q "cp .*my_configs.vim.example .*my_configs.vim" "$REPO_ROOT/my_configs.vim.example"; then
+  pass "IT-094b: .example documenta o comando de ativação (cp)"
+else
+  fail "IT-094b: comando de ativação ausente no .example"
+fi
+
+# IT-094c: um arquivo DENTRO de my_configs/ também é ignorado pelo git
+if command -v git > /dev/null 2>&1; then
+  if git -C "$REPO_ROOT" check-ignore -q "my_configs/qualquer.vim" 2>/dev/null; then
+    pass "IT-094c: my_configs/<arquivo>.vim é ignorado pelo git"
+  else
+    fail "IT-094c: my_configs/<arquivo>.vim NÃO é ignorado pelo git"
+  fi
+else
+  warn "IT-094c: git ausente — pulei a checagem de ignore de subarquivo"
 fi
 
 # ── Resultado ─────────────────────────────────────────────────────────────────
