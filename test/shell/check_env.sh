@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Suite de testes de shell — IT-001 a IT-020, IT-086, IT-087
+# Suite de testes de shell — IT-001 a IT-020, IT-086, IT-087, IT-090 a IT-092
 # Uso: bash test/shell/check_env.sh
 set -euo pipefail
 
@@ -279,6 +279,56 @@ echo "$_out" | grep -qiE "node.*aus|node.*não|node.*nao|node.*instale" \
 [ "$_rc" -eq 0 ] \
   && pass "IT-091b: pre-flight não aborta quando falta dependência" \
   || fail "IT-091b: install.sh abortou (exit $_rc) — pre-flight deve só avisar"
+
+# ── IT-092: customizações locais (my_configs.vim) ────────────────────────────
+echo ""
+echo "── IT-092: ponto de extensão local (my_configs.vim) ────────────────────"
+
+# IT-092a: o arquivo de exemplo (documentação viva) é versionado
+[ -f "$REPO_ROOT/my_configs.vim.example" ] \
+  && pass "IT-092a: my_configs.vim.example existe na raiz" \
+  || fail "IT-092a: my_configs.vim.example ausente"
+
+# IT-092b: configs.vim carrega my_configs.vim e a pasta my_configs/ por último
+if grep -q "my_configs.vim" "$REPO_ROOT/configs.vim" \
+   && grep -q "my_configs/\*.vim" "$REPO_ROOT/configs.vim"; then
+  pass "IT-092b: configs.vim sourça my_configs.vim e my_configs/*.vim"
+else
+  fail "IT-092b: loop de source de my_configs ausente em configs.vim"
+fi
+
+# IT-092c: .gitignore ignora o arquivo e a pasta locais
+if grep -qx "my_configs.vim" "$REPO_ROOT/.gitignore" \
+   && grep -qx "my_configs/" "$REPO_ROOT/.gitignore"; then
+  pass "IT-092c: .gitignore ignora my_configs.vim e my_configs/"
+else
+  fail "IT-092c: .gitignore não ignora my_configs.vim e/ou my_configs/"
+fi
+
+# IT-092d: o exemplo versionado não é, ele próprio, ignorado por engano
+if command -v git > /dev/null 2>&1; then
+  if git -C "$REPO_ROOT" check-ignore -q my_configs.vim.example 2>/dev/null; then
+    fail "IT-092d: my_configs.vim.example está sendo ignorado pelo .gitignore"
+  else
+    pass "IT-092d: my_configs.vim.example não é ignorado (continua versionado)"
+  fi
+else
+  warn "IT-092d: git ausente — pulei a checagem de ignore do exemplo"
+fi
+
+# IT-092e: o exemplo é VimScript válido — sourcea sem erro E em vim headless
+if command -v vim > /dev/null 2>&1; then
+  _out=$(vim -N -u NONE -i NONE -es \
+    -c "try | source $REPO_ROOT/my_configs.vim.example | catch | echom 'ERRO:' . v:exception | endtry" \
+    -c "qa!" 2>&1) || true
+  if echo "$_out" | grep -qiE "^ERRO:|E[0-9]+:"; then
+    fail "IT-092e: my_configs.vim.example não sourcea limpo: $_out"
+  else
+    pass "IT-092e: my_configs.vim.example sourcea sem erro"
+  fi
+else
+  warn "IT-092e: vim ausente — pulei a checagem de source do exemplo"
+fi
 
 # ── Resultado ─────────────────────────────────────────────────────────────────
 echo ""

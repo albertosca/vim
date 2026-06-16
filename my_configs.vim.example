@@ -1,0 +1,96 @@
+" =============================================================================
+" my_configs.vim — suas customizações LOCAIS (não-versionadas)
+" =============================================================================
+"
+" Este é o lugar para mexer no Vim SEM editar o repo e SEM forkar. Tudo que
+" você puser aqui é seu, fica fora do git, e nunca dá conflito no `git pull`.
+"
+" -----------------------------------------------------------------------------
+" COMO ATIVAR
+" -----------------------------------------------------------------------------
+"   cp ~/.vim_runtime/my_configs.vim.example ~/.vim_runtime/my_configs.vim
+"   # edite ~/.vim_runtime/my_configs.vim e recarregue o Vim (ou :source %)
+"
+" Prefere organizar por tema em vez de um arquivo só? Crie a pasta e solte
+" quantos arquivos quiser — todos os .vim dela são carregados em ordem:
+"   mkdir -p ~/.vim_runtime/my_configs
+"   # ~/.vim_runtime/my_configs/mappings.vim, .../colors.vim, etc.
+"
+" Tanto `my_configs.vim` quanto `my_configs/` são gitignored. Só este
+" `.example` é versionado — ele é a documentação, não edite ele para uso.
+"
+" -----------------------------------------------------------------------------
+" ORDEM DE CARREGAMENTO — por que o que está aqui VENCE
+" -----------------------------------------------------------------------------
+" O Vim carrega, nesta ordem (a última definição ganha):
+"   1. vimrcs/options.vim      defaults
+"   2. vimrcs/filetypes.vim
+"   3. vimrcs/plugins.vim
+"   4. vimrcs/editor.vim
+"   5. configs.vim             customizações do mantenedor
+"   6. ESTE ARQUIVO            <-- por último, então sobrescreve tudo acima
+"
+" Ressalva: arquivos plugin/*.vim de plugins são sourceados pelo Vim DEPOIS
+" do vimrc inteiro. Um plugin que insiste em definir um mapping pode, em casos
+" raros, vencer o seu. Se isso acontecer, adie o seu mapping para depois do
+" startup:
+"     augroup MyLocalOverrides
+"       autocmd!
+"       autocmd VimEnter * nnoremap <silent> <C-p> :Files<CR>
+"     augroup END
+"
+" -----------------------------------------------------------------------------
+" FICA LOCAL  vs.  ABRE PR  — qual é qual?
+" -----------------------------------------------------------------------------
+" Pergunta-chave: "isso é gosto MEU, ou melhoraria o setup pra TODO MUNDO?"
+"
+"   FICA LOCAL (este arquivo) — só faz sentido pra você ou pra esta máquina:
+"     - seus mappings e leader pessoais
+"     - colorscheme/fonte/tamanho que você prefere
+"     - opções de gosto (number vs relativenumber, scrolloff, etc.)
+"     - paths e ajustes específicos da máquina (ex: caminho de um binário)
+"     - desligar um mapping/recurso que te atrapalha
+"
+"   ABRE UM PR (muda o repo, beneficia todos) — mande para o upstream:
+"     - trocar um plugin por um claramente melhor
+"     - adicionar um plugin útil pra qualquer pessoa do time
+"     - corrigir um bug ou um default ruim que afeta todo mundo
+"     - melhorar a documentação
+"
+" Por que plugin é quase sempre PR: o gerenciador aqui é o Pathogen, e os
+" plugins vivem em `plugins/` (versionado, alguns como submodule). Não dá pra
+" "instalar um plugin só pra você" de forma limpa por aqui — então trocar ou
+" adicionar plugin é, por natureza, uma mudança de repo. Faça um PR.
+"
+" =============================================================================
+" EXEMPLOS  (tudo comentado — descomente/adapte o que quiser usar)
+" =============================================================================
+
+" --- Mappings pessoais -------------------------------------------------------
+" Sempre nnoremap/xnoremap (não `map`): evita recursão e vazamento de modo.
+" nnoremap <leader>w :w<CR>
+" nnoremap <leader>q :q<CR>
+
+" --- Override de opção --------------------------------------------------------
+" set relativenumber          " linhas relativas
+" set scrolloff=8             " mantém 8 linhas de contexto ao rolar
+" set colorcolumn=100         " guia de coluna
+
+" --- Trocar o colorscheme (entre os que já existem no repo) -------------------
+" colorscheme desert
+
+" --- Desligar um mapping/recurso que te incomoda ------------------------------
+" Sobrescreve com <Nop> (não dá pra "des-mapear" o do mantenedor, só redefinir):
+" nnoremap <leader>pc <Nop>
+
+" --- Indentação por linguagem (só pra você) -----------------------------------
+" augroup MyLocalFiletypes
+"   autocmd!
+"   autocmd FileType go setlocal noexpandtab shiftwidth=4 tabstop=4
+" augroup END
+
+" --- Override teimoso (vence plugin que remapeia no load) ---------------------
+" augroup MyLocalOverrides
+"   autocmd!
+"   autocmd VimEnter * nnoremap <silent> <C-p> :Files<CR>
+" augroup END

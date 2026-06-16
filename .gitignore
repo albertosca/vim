@@ -25,3 +25,7 @@ test/node/node_modules/
 
 # Superpowers skills (infra local de Claude Code)
 docs/superpowers/
+
+# Customizações locais do usuário (ver my_configs.vim.example, que É versionado)
+my_configs.vim
+my_configs/

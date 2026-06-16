@@ -613,3 +613,26 @@ augroup StartScreen
   autocmd!
   autocmd VimEnter * call s:StartScreen()
 augroup end
+
+" =============================================================================
+" Customizações LOCAIS (não-versionadas)
+" -----------------------------------------------------------------------------
+" Última camada da cadeia de carregamento: roda DEPOIS de tudo neste arquivo,
+" então vence options e mappings definidos acima (exceto mappings que algum
+" plugin/*.vim reescreve depois do vimrc — caso raro).
+"
+" Carrega, se existirem:
+"   ~/.vim_runtime/my_configs.vim       — arquivo único
+"   ~/.vim_runtime/my_configs/*.vim     — vários arquivos (carregados em ordem)
+"
+" Ambos são gitignored. Comece copiando o exemplo:
+"   cp ~/.vim_runtime/my_configs.vim.example ~/.vim_runtime/my_configs.vim
+" Veja esse .example para o guia "fica local vs. abre PR".
+" =============================================================================
+for s:local_cfg in [expand('~/.vim_runtime/my_configs.vim')]
+      \ + sort(glob('~/.vim_runtime/my_configs/*.vim', 0, 1))
+  if filereadable(s:local_cfg)
+    execute 'source' fnameescape(s:local_cfg)
+  endif
+endfor
+unlet! s:local_cfg
