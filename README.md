@@ -2,7 +2,7 @@
 
 Setup profissional para desenvolvimento poliglota: **Elixir/Phoenix, Ruby/Rails, JS/React/Node, Python, Go, Rust**.
 
-CoC.nvim como LSP client, fzf como busca unificada, e 316 testes automatizados. Veja [Créditos](#créditos).
+CoC.nvim como LSP client, fzf como busca unificada, e 328 testes automatizados. Veja [Créditos](#créditos).
 
 ## Estrutura
 
@@ -69,6 +69,32 @@ source ~/.vim_runtime/vimrcs/editor.vim
 source ~/.vim_runtime/configs.vim
 ```
 
+## Personalizando (sem mexer no repo)
+
+Quer seus proprios atalhos, colorscheme ou opcoes **sem editar arquivos
+versionados nem forkar**? Use o ponto de extensao local — ele e carregado por
+ultimo, entao sobrescreve tudo o que veio antes:
+
+```bash
+cp ~/.vim_runtime/my_configs.vim.example ~/.vim_runtime/my_configs.vim
+# edite ~/.vim_runtime/my_configs.vim e recarregue o Vim
+```
+
+Prefere organizar por tema em vez de um arquivo so? Crie a pasta `my_configs/`
+e solte quantos `.vim` quiser — todos sao carregados em ordem alfabetica:
+
+```bash
+mkdir -p ~/.vim_runtime/my_configs
+# ~/.vim_runtime/my_configs/mappings.vim, .../colors.vim, etc.
+```
+
+`my_configs.vim` e `my_configs/` sao **gitignored** — nunca conflitam no
+`git pull`. So o `my_configs.vim.example` (versionado) e a documentacao, com
+exemplos e o criterio **fica local vs. abre PR**:
+
+- **Fica local** (so seu): mappings, colorscheme, opcoes de gosto, paths da maquina.
+- **Abre um PR** (melhora pra todos): trocar/adicionar um plugin, corrigir bug ou default ruim.
+
 ## Plugins (49)
 
 | Categoria | Plugins |
@@ -127,7 +153,7 @@ Destaques:
 
 ## Testes
 
-316 testes automatizados em 5 suites:
+328 testes automatizados em 5 suites:
 
 ```bash
 bash test/run.sh          # compacto — uma linha por suite
@@ -139,13 +165,13 @@ bash test/run.sh unit     # rodar uma suite especifica
 ```
   Vim Config Test Suite
   ─────────────────────────────────────────────────────
-  ✓  shell            48 passed  1 warn  0 failed
+  ✓  shell            60 passed  1 warn  0 failed
   ✓  unit             90 passed  0 failed
   ✓  integration      131 passed  0 failed
   ✓  e2e              19 passed  0 failed
   ✓  jest             28 passed  0 failed
   ─────────────────────────────────────────────────────
-  ✓ 316 passed   all green
+  ✓ 328 passed   all green
 ```
 
 Detalhes da arquitetura de testes em **[docs/test_plan.md](docs/test_plan.md)**.
