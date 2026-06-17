@@ -344,15 +344,25 @@ if [ -e "$_LF" ] || [ -e "$_LD" ]; then
 elif ! command -v vim > /dev/null 2>&1; then
   warn "IT-093: vim ausente — pulei testes funcionais"
 else
-  # Arquivo único: define marcador e SOBRESCREVE um valor que configs.vim já setou
-  printf 'let g:tt_single = 1\nlet g:claude_code_split_ratio = 0.99\n' > "$_LF"
-  # Pasta: 01 carrega antes de 02; ambos setam g:tt_order → o último (02) vence
+  # Arquivo único: marcador, SOBRESCREVE um valor de configs.vim, registra um
+  # atalho novo (<F8>) e SOBRESCREVE um atalho da base (<leader>e do editor.vim).
+  {
+    printf 'let g:tt_single = 1\n'
+    printf 'let g:claude_code_split_ratio = 0.99\n'
+    printf "let g:tt_precedence = 'file'\n"
+    printf "nnoremap <F8> :echo 'new-map'<CR>\n"
+    printf "nnoremap <leader>e :echo 'override-won'<CR>\n"
+  } > "$_LF"
+  # Pasta: 01 antes de 02 (ambos setam g:tt_order → 02 vence); 03 sobrescreve
+  # g:tt_precedence do arquivo único (a pasta carrega DEPOIS do my_configs.vim).
   mkdir -p "$_LD"
   printf "let g:tt_glob = 1\nlet g:tt_order = 'first'\n"  > "$_LD/01_first.vim"
   printf "let g:tt_order = 'second'\n"                    > "$_LD/02_second.vim"
+  printf "let g:tt_precedence = 'dir'\n"                  > "$_LD/03_precedence.vim"
 
   # Comando numa linha só: continuação com '\' não vale em argumento -c do Vim.
-  _cmd='call writefile(["RESULT single=".get(g:,"tt_single",0)." glob=".get(g:,"tt_glob",0)." order=".get(g:,"tt_order","none")." ratio=".printf("%.2f",get(g:,"claude_code_split_ratio",-1))], "/dev/stderr")'
+  # mapleader resolvido em runtime (default ',') para consultar o <leader>e.
+  _cmd='call writefile(["RESULT single=".get(g:,"tt_single",0)." glob=".get(g:,"tt_glob",0)." order=".get(g:,"tt_order","none")." ratio=".printf("%.2f",get(g:,"claude_code_split_ratio",-1))." precedence=".get(g:,"tt_precedence","none")." newmap=<".maparg("<F8>","n")."> overmap=<".maparg(get(g:,"mapleader",",")."e","n").">"], "/dev/stderr")'
   # g:copilot_chat_test_mode evita o device-auth input() que trava headless.
   _out=$(timeout 30 vim -N -u "$REPO_ROOT/vimrc_example" -i NONE -es \
     --cmd "let g:copilot_chat_test_mode = 1" \
@@ -375,8 +385,17 @@ else
       && pass "IT-093c: ordem alfabética — 02 vence 01" \
       || fail "IT-093c: ordem de carga errada — $_out"
     echo "$_out" | grep -q "ratio=0.99" \
-      && pass "IT-093d: override local vence configs.vim (0.4 -> 0.99)" \
+      && pass "IT-093d: override de opção/var vence configs.vim (0.4 -> 0.99)" \
       || fail "IT-093d: override não venceu configs.vim — $_out"
+    echo "$_out" | grep -q "override-won" \
+      && pass "IT-093e: atalho local sobrescreve mapping da base (<leader>e)" \
+      || fail "IT-093e: override de mapping não venceu — $_out"
+    echo "$_out" | grep -q "new-map" \
+      && pass "IT-093f: atalho novo do usuário (<F8>) é registrado" \
+      || fail "IT-093f: mapping novo não foi registrado — $_out"
+    echo "$_out" | grep -q "precedence=dir" \
+      && pass "IT-093g: my_configs/*.vim sobrescreve my_configs.vim (carrega depois)" \
+      || fail "IT-093g: precedência pasta-sobre-arquivo errada — $_out"
   fi
 fi
 
