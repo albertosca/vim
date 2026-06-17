@@ -410,6 +410,14 @@ else
   warn "IT-094c: git ausente — pulei a checagem de ignore de subarquivo"
 fi
 
+# IT-094d: o README documenta a personalização local (descobribilidade)
+if grep -qi "my_configs" "$REPO_ROOT/README.md" \
+   && grep -qi "Personalizando" "$REPO_ROOT/README.md"; then
+  pass "IT-094d: README documenta a personalização local (my_configs)"
+else
+  fail "IT-094d: README não documenta my_configs / seção Personalizando"
+fi
+
 # ── Resultado ─────────────────────────────────────────────────────────────────
 echo ""
 echo "────────────────────────────────────────────────────────────────────────"
