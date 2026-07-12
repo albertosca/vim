@@ -25,7 +25,7 @@ Nenhum arquivo do Vim é duplicado pro Neovim — só ganham esses dois tipos de
 
 ### Namespace da config Lua
 
-Tudo em `~/.config/nvim/lua/user/*.lua` (não `lua/*.lua` direto) — isso existe porque vários plugins têm um módulo Lua com o mesmo nome do arquivo que a gente escreveria (`nvim-dap` tem `lua/dap.lua`, `gitsigns.nvim` tem `lua/gitsigns.lua`). Um arquivo nosso `lua/dap.lua` se auto-referenciaria em `require('dap')` em vez de carregar o plugin — vira loop. Namespacear em `user/` elimina esse risco de vez.
+Tudo em `nvim/lua/user/*.lua` (dentro do `~/.vim_runtime`, symlinkado em `~/.config/nvim`; não `lua/*.lua` direto) — isso existe porque vários plugins têm um módulo Lua com o mesmo nome do arquivo que a gente escreveria (`nvim-dap` tem `lua/dap.lua`, `gitsigns.nvim` tem `lua/gitsigns.lua`). Um arquivo nosso `lua/dap.lua` se auto-referenciaria em `require('dap')` em vez de carregar o plugin — vira loop. Namespacear em `user/` elimina esse risco de vez.
 
 ---
 
@@ -107,6 +107,22 @@ Pathogen continua cuidando de tudo que é compartilhado com o Vim (`~/.vim_runti
 | JS/TS | `nvim-dap-vscode-js` | `js-debug-adapter` (mason instala sozinho) |
 
 Atalhos: ver [`keybindings.md` seção 20](keybindings.md#20-dap-debugger--elixir-go-python-ruby-jsts).
+
+---
+
+## Testes
+
+Dois frameworks, um pra cada tipo de conteúdo (ver [`test_plan.md`](test_plan.md) pra arquitetura completa):
+
+- **`test/nvim/*.vader`** — roda sob `nvim --headless` usando o `nvim/init.vim` real (sistema completo montado, mesmo espírito da suite `integration`). Cobre os branches `has('nvim')` que já existem em `configs.vim`/`vimrcs/*.vim` e que a suite `vim` nunca alcança.
+- **`test/nvim/*_spec.lua`** — plenary.nvim (busted-style), init mínimo (só plenary + `nvim/` no runtimepath, sem subir LSP/DAP/lazy.nvim inteiro). Cobre o que é Lua genuinamente complexo: `lsp.lua`, `dap.lua`, `treesitter.lua`, `flash.lua`, `harpoon.lua`, `trouble.lua`.
+
+```bash
+bash test/run.sh nvim-vader   # só a suite vader-sob-nvim
+bash test/run.sh nvim-lua     # só os specs plenary
+```
+
+**Critério de cobertura:** módulo com lógica própria não-trivial (config custom, função nossa, keymap nosso) ganha spec. `require('plugin').setup({})` de uma linha sem nada custom não ganha.
 
 ---
 

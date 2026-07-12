@@ -125,7 +125,7 @@ Esses LSPs não vêm por padrão — ver tabela "LSP por linguagem" acima para o
 
 ## Neovim (opcional, dual-boot)
 
-Este mesmo repo funciona também no Neovim — nenhum arquivo é duplicado, `~/.config/nvim/init.vim` reaproveita `configs.vim`/`vimrcs/*.vim` inteiros. Arquitetura completa, inventário de plugins e bugs já resolvidos em [`neovim.md`](neovim.md).
+Este mesmo repo funciona também no Neovim — nenhum arquivo é duplicado, `nvim/init.vim` (dentro do próprio `~/.vim_runtime`, symlinkado em `~/.config/nvim` pelo `install.sh`) reaproveita `configs.vim`/`vimrcs/*.vim` inteiros. Arquitetura completa, inventário de plugins e bugs já resolvidos em [`neovim.md`](neovim.md).
 
 **Instalação:**
 

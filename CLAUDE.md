@@ -16,6 +16,8 @@ autoload/pathogen.vim    ← plugin manager
 colors/                  ← colorschemes extras (gruvbox é o ativo, vive em plugins/)
 test/                    ← suite de testes (vader, jest, shell) — ver docs/test_plan.md
 docs/                    ← documentação (keybindings, test plan)
+nvim/                     ← config Neovim (init.vim, lua/user/*.lua) — symlinkada em ~/.config/nvim por install.sh
+test/nvim/                ← testes so-Neovim: *.vader roda sob `nvim --headless` (init.vim completo), *_spec.lua roda via plenary.nvim (init minimo)
 temp_dirs/undodir/       ← undo persistente (cleanup automático >90 dias)
 ```
 

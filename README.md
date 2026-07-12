@@ -10,6 +10,7 @@ CoC.nvim como LSP client, fzf como busca unificada, e 344 testes automatizados. 
 
 ```
 configs.vim              ← arquivo principal — edite aqui
+nvim/                     ← config Neovim (symlinkada em ~/.config/nvim pelo install.sh)
 vimrcs/
   options.vim            ← opcoes do Vim (set commands)
   filetypes.vim          ← deteccao de filetype e indent por linguagem
@@ -158,7 +159,7 @@ Destaques:
 
 ## Testes
 
-344 testes automatizados em 5 suites:
+365 testes automatizados em 7 suites:
 
 ```bash
 bash test/run.sh          # compacto — uma linha por suite
@@ -175,8 +176,10 @@ bash test/run.sh unit     # rodar uma suite especifica
   ✓  integration      134 passed  0 failed
   ✓  e2e              19 passed  0 failed
   ✓  jest             28 passed  0 failed
+  ✓  nvim-vader        4 passed  0 failed
+  ✓  nvim-lua         17 passed  0 failed
   ─────────────────────────────────────────────────────
-  ✓ 344 passed   all green
+  ✓ 365 passed   all green
 ```
 
 Detalhes da arquitetura de testes em **[docs/test_plan.md](docs/test_plan.md)**.

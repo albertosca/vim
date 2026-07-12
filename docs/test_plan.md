@@ -10,6 +10,8 @@
 | **Vim nativo headless** (`vim -es -u vimrc`) | Verificação de variáveis, opções, startup sem erros, plugins carregados |
 | **Shell (bash + assert)** | Existência de plugins, binários disponíveis, contagem de arquivos, integridade JSON |
 | **Jest / Node.js** | Validade do `coc-settings.json` (schema, tipos, valores), lista de extensões CoC |
+| **`test/nvim/*.vader`** (vader sob nvim) | Branches `has('nvim')` em `configs.vim`/`vimrcs/*.vim`, rodando sob `nvim --headless` com o `nvim/init.vim` real |
+| **`test/nvim/*_spec.lua`** (plenary.nvim) | Módulos Lua exclusivos do Neovim: `lsp.lua`, `dap.lua`, `treesitter.lua`, `flash.lua`, `harpoon.lua`, `trouble.lua` |
 
 ### O que NÃO é testável automaticamente
 
@@ -55,6 +57,12 @@ bash test/shell/check_env.sh
 
 # Testes JSON (Node.js)
 cd test/node && npm test
+
+# Testes Neovim — vader sob nvim (branches has('nvim'))
+nvim --headless -u nvim/init.vim --cmd "set rtp+=test/vendor/vader.vim" -c "Vader! test/nvim/*.vader" -c "qa!"
+
+# Testes Neovim — plenary (Lua puro: lsp, dap, treesitter, flash, harpoon, trouble)
+nvim --headless -u test/nvim/minimal_init.lua -c "PlenaryBustedDirectory test/nvim/ {minimal_init = 'test/nvim/minimal_init.lua'}"
 ```
 
 ### CI — GitHub Actions (esqueleto)
