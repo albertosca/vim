@@ -1,0 +1,43 @@
+" NV-001 a NV-004: branches has('nvim') alcancaveis so quando esta suite
+" roda sob o binario `nvim` (test/run.sh cuida disso — ver Task 3).
+" UT-100/101 (test/unit/functions.vader) cobrem o branch Vim do mesmo
+" StartScreenLines() porque so rodam sob `vim`; aqui e o espelho pro
+" branch Neovim, que ate agora era invisivel pra suite inteira.
+
+Before:
+  if !exists('g:configs_sid') || g:configs_sid == 0
+    let g:configs_sid = 0
+    for s:sline in split(execute('scriptnames'), "\n")
+      if s:sline =~# 'vim_runtime/configs\.vim'
+        let g:configs_sid = str2nr(matchstr(s:sline, '^\s*\zs\d\+'))
+        break
+      endif
+    endfor
+  endif
+  Assert g:configs_sid > 0, 'configs.vim nao foi carregado'
+  Assert has('nvim'), 'este arquivo so deveria rodar sob nvim --headless (ver test/run.sh)'
+
+Execute (NV-001 StartScreenLines mostra LSP nativo no Neovim, nao CoC):
+  let StartScreenLines = function('<SNR>' . g:configs_sid . '_StartScreenLines')
+  let joined = join(StartScreenLines(), "\n")
+  Assert joined =~# 'LSP (nativo)', 'StartScreenLines deveria mencionar "LSP (nativo)" no Neovim'
+  Assert joined !~# 'LSP (CoC)', 'StartScreenLines vazou conteudo do Vim pro Neovim'
+
+Execute (NV-002 StartScreenLines mostra atalhos exclusivos do Neovim):
+  let StartScreenLines = function('<SNR>' . g:configs_sid . '_StartScreenLines')
+  let joined = join(StartScreenLines(), "\n")
+  Assert joined =~# 'Flash jump', 'flash.nvim deveria aparecer no Neovim'
+  Assert joined =~# 'Harpoon', 'harpoon2 deveria aparecer no Neovim'
+  Assert joined !~# 'Claude Code (toggle)', 'vim-claude-code e so-Vim, nao deveria aparecer no Neovim'
+
+Execute (NV-003 plugins do g:pathogen_disabled nao registram comandos no Neovim):
+  Assert index(g:pathogen_disabled, 'coc.nvim') >= 0, 'coc.nvim deveria estar em g:pathogen_disabled'
+  Assert index(g:pathogen_disabled, 'nerdtree') >= 0, 'nerdtree deveria estar em g:pathogen_disabled'
+  Assert !exists(':CocInstall'), 'coc.nvim carregou comandos mesmo desabilitado'
+  Assert !exists(':NERDTree'), 'nerdtree carregou comandos mesmo desabilitado'
+
+Execute (NV-004 todo plugin citado em g:pathogen_disabled existe de verdade em plugins/):
+  for p in g:pathogen_disabled
+    Assert isdirectory(expand('~/.vim_runtime/plugins/' . p)),
+          \ 'g:pathogen_disabled cita "' . p . '" mas plugins/' . p . ' nao existe'
+  endfor
