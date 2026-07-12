@@ -225,15 +225,22 @@ fi
 
 # ── Vader suite runner ────────────────────────────────────────────────────────
 run_vader_suite() {
-  local name="$1" glob="$2"
+  local name="$1" glob="$2" bin="${3:-vim}"
 
   local files
   files=$(ls $glob 2>/dev/null || true)
   [[ -z "$files" ]] && return
 
+  local uarg
+  if [[ "$bin" == "nvim" ]]; then
+    uarg="$REPO_ROOT/nvim/init.vim"
+  else
+    uarg="$HOME/.vimrc"
+  fi
+
   local _start _out _elapsed
   _start=$(now_ms)
-  _out=$(vim -N -u ~/.vimrc \
+  _out=$("$bin" -N -u "$uarg" \
     --cmd "set rtp+=$VADER_RTP" \
     --cmd "let g:copilot_chat_test_mode = 1" \
     -c "Vader! $glob" \
@@ -272,6 +279,12 @@ fi
 
 if [[ "$FASE" == "all" || "$FASE" == "e2e" ]]; then
   run_vader_suite "e2e" "test/e2e/*.vader"
+fi
+
+if [[ "$FASE" == "all" || "$FASE" == "nvim-vader" ]]; then
+  if command -v nvim > /dev/null 2>&1; then
+    run_vader_suite "nvim-vader" "test/nvim/*.vader" "nvim"
+  fi
 fi
 
 # ── Jest ──────────────────────────────────────────────────────────────────────
