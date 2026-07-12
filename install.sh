@@ -7,6 +7,7 @@
 #   2. Inicializa/atualiza os submodules (fzf, coc.nvim, vim-elixir, ...).
 #   3. Cria ~/.vimrc apontando para vimrc_example.
 #   4. Linka coc-settings.json em ~/.vim/coc-settings.json (config do LSP).
+#   5. Linka ~/.config/nvim em vim_runtime/nvim (Neovim dual-boot, opcional).
 #
 # Uso:
 #   git clone --recursive https://github.com/albertosca/vim-runtime.git ~/.vim_runtime
@@ -93,6 +94,12 @@ mkdir -p "$HOME/.vim"
 backup_if_exists "$HOME/.vim/coc-settings.json"
 ln -sf "$EXPECTED/coc-settings.json" "$HOME/.vim/coc-settings.json"
 info "~/.vim/coc-settings.json → vim_runtime/coc-settings.json"
+
+# 5. ~/.config/nvim → vim_runtime/nvim (Neovim dual-boot, opcional)
+mkdir -p "$HOME/.config"
+backup_if_exists "$HOME/.config/nvim"
+ln -sf "$EXPECTED/nvim" "$HOME/.config/nvim"
+info "~/.config/nvim → vim_runtime/nvim (Neovim dual-boot)"
 
 echo "────────────────────────────────────────────"
 echo "Pronto. Próximos passos:"
