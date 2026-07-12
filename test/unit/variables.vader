@@ -361,3 +361,23 @@ Execute (UT-097 vim_markdown_conceal ativo):
         \ 'g:vim_markdown_conceal nao definido'
   AssertEqual 1, g:vim_markdown_conceal,
         \ 'vim_markdown_conceal deveria ser 1 (conceal habilitado)'
+
+Execute (UT-098 table_mode_map_prefix nao colide com tabmove):
+  Assert exists('g:table_mode_map_prefix'),
+        \ 'g:table_mode_map_prefix nao definido'
+  AssertEqual '<Leader>M', g:table_mode_map_prefix,
+        \ 'table_mode_map_prefix deveria ser <Leader>M (o padrao <Leader>t colide com ,tm=:tabmove)'
+  " Nao basta checar a variavel — confere o mapping de fato resultante e
+  " que ,tm continua intocado (a colisao real seria aqui, nao na variavel).
+  AssertEqual ':tabmove', maparg(',tm', 'n'),
+        \ ',tm deveria continuar sendo :tabmove, sem interferencia do table-mode'
+  Assert maparg(',Mm', 'n') =~# 'tablemode#Toggle',
+        \ 'toggle do table-mode deveria estar em ,Mm (prefixo <Leader>M + m)'
+
+Execute (UT-099 AutoPairsMapCR so e sobrescrito no Neovim):
+  " No Vim real (has('nvim')==0), g:AutoPairsMapCR nao e setado por nos —
+  " quem define e o proprio auto-pairs.vim, com o default dele (1).
+  Assert exists('g:AutoPairsMapCR'),
+        \ 'g:AutoPairsMapCR nao definido (nem pelo plugin)'
+  AssertEqual 1, g:AutoPairsMapCR,
+        \ 'no Vim, AutoPairsMapCR deveria ficar no default do plugin (1) — nosso override e so has(nvim)'

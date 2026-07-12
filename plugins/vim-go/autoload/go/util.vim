@@ -299,25 +299,26 @@ endfunction
 " {special} argument of shellescape() may optionally be passed.
 function! go#util#Shelljoin(arglist, ...) abort
   try
-    let ssl_save = &shellslash
-    set noshellslash
+    " 'shellslash' só existe no Vim (compat Windows) — Neovim nunca a implementou.
+    let ssl_save = has('nvim') ? '' : &shellslash
+    if !has('nvim') | set noshellslash | endif
     if a:0
       return join(map(copy(a:arglist), 'shellescape(v:val, ' . a:1 . ')'), ' ')
     endif
 
     return join(map(copy(a:arglist), 'shellescape(v:val)'), ' ')
   finally
-    let &shellslash = ssl_save
+    if !has('nvim') | let &shellslash = ssl_save | endif
   endtry
 endfunction
 
 fu! go#util#Shellescape(arg)
   try
-    let ssl_save = &shellslash
-    set noshellslash
+    let ssl_save = has('nvim') ? '' : &shellslash
+    if !has('nvim') | set noshellslash | endif
     return shellescape(a:arg)
   finally
-    let &shellslash = ssl_save
+    if !has('nvim') | let &shellslash = ssl_save | endif
   endtry
 endf
 
@@ -325,14 +326,14 @@ endf
 " arglist. The {special} argument of shellescape() may optionally be passed.
 function! go#util#Shelllist(arglist, ...) abort
   try
-    let ssl_save = &shellslash
-    set noshellslash
+    let ssl_save = has('nvim') ? '' : &shellslash
+    if !has('nvim') | set noshellslash | endif
     if a:0
       return map(copy(a:arglist), 'shellescape(v:val, ' . a:1 . ')')
     endif
     return map(copy(a:arglist), 'shellescape(v:val)')
   finally
-    let &shellslash = ssl_save
+    if !has('nvim') | let &shellslash = ssl_save | endif
   endtry
 endfunction
 

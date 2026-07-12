@@ -70,7 +70,7 @@ Prestar atenção em títulos com `BREAKING`, `breaking change`, `remove`, `rena
 Atualizar de uma vez pode obscurecer qual plugin causou uma regressão. Melhor ir em grupos:
 
 **Grupo A — baixo risco** (VimScript puro, single-purpose):
-`undotree`, `vim-closetag`, `vim-endwise`, `vim-obsession`, `vim-rooter`, `vim-unimpaired`, `gv.vim`, `vimux`, `vim-mdx-js`
+`undotree`, `vim-closetag`, `vim-endwise`, `vim-obsession`, `vim-rooter`, `vim-unimpaired`, `gv.vim`, `vimux`, `vim-mdx-js`, `vim-which-key`, `vim-table-mode`
 
 **Grupo B — médio risco** (feature-rich, podem ter mudanças de API):
 `fzf.vim`, `vim-elixir`, `vim-mix-format`, `vim-test`, `vim-dadbod`, `vim-dadbod-completion`, `vim-dadbod-ui`, `vim-rails`, `vim-projectionist`, `vim-jsx-improve`, `vim-js-pretty-template`, `vim-snippets`
@@ -199,3 +199,16 @@ git -C plugins/NOME log --oneline --graph HEAD..origin/HEAD
 # Se for cleanup intencional:
 git -C plugins/NOME reset --hard origin/HEAD
 ```
+
+---
+
+## Plugins exclusivos do Neovim (mecanismo separado)
+
+Tudo isso **não** é submodule/embedded deste repo — vive em `~/.local/share/nvim/lazy/` e `~/.local/share/nvim/mason/`, gerenciado por dentro do próprio Neovim. Ver inventário completo em [`neovim.md`](neovim.md).
+
+```vim
+:Lazy sync     " atualiza os plugins Lua (lua/user/plugins.lua)
+:MasonUpdate   " atualiza LSP servers/DAP adapters/formatters/linters
+```
+
+Baseline antes de mexer é o mesmo: `bash test/run.sh` continua cobrindo só o lado Vim (compartilhado) — não existe suite automatizada pro lado Neovim ainda.

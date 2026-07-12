@@ -2,6 +2,10 @@
 
 `mapleader` = vírgula (`,`)
 
+Este arquivo cobre **Vim e Neovim** — a maior parte dos atalhos é idêntica nos dois (mesmo `configs.vim` compartilhado). Onde os dois divergem (LSP, completion, plugins visuais), tem uma nota clara **[Vim]** / **[Neovim]** ao lado. Seções 16+ são exclusivas do Neovim (não existem no Vim).
+
+> **Tela de boas-vindas:** abrir `vim`/`nvim` sem argumento (buffer vazio, sem sessão restaurada) mostra uma mini-versão deste cheatsheet direto na tela — conteúdo adaptado por editor (`s:StartScreenLines()` em `configs.vim`, branch `has('nvim')`). Não aparece se abrir com arquivo, sessão restaurada, ou dentro da suite de testes.
+
 ---
 
 ## 1. Arquivos, Buffers e Busca (fzf)
@@ -14,11 +18,11 @@
 | `,rg` | Busca por conteúdo com ripgrep | fzf |
 | `,bl` | Buscar linhas no buffer atual | fzf |
 | `,ht` | Historico de arquivos abertos | fzf |
-| `,nn` | Abrir/Fechar arvore de arquivos | NERDTree |
-| `,nf` | Localizar arquivo atual na arvore | NERDTree |
-| `,nb` | Abrir NERDTree a partir de um bookmark | NERDTree |
-| `,cs` | Copiar **nome** do arquivo para clipboard | Custom |
-| `,cl` | Copiar **caminho completo** para clipboard | Custom |
+| `,nn` | Abrir/Fechar árvore de arquivos | NERDTree **[Vim]** / neo-tree **[Neovim]** |
+| `,nf` | Localizar arquivo atual na árvore | NERDTree **[Vim]** / neo-tree **[Neovim]** |
+| `,nb` | Abrir NERDTree a partir de um bookmark | NERDTree **[Vim apenas]** |
+| `,cs` | Copiar caminho **relativo ao diretório aberto** (com vim-rooter, é relativo à raiz do projeto) | Custom |
+| `,cl` | Copiar **caminho absoluto completo** | Custom |
 
 > **Dentro do fzf:** `Tab` seleciona multiplos, `Ctrl+/` alterna preview, `Enter` abre, `Ctrl+t` abre em nova aba, `Ctrl+x` split horizontal, `Ctrl+v` split vertical.
 
@@ -28,81 +32,84 @@
 
 **Splits e abas:**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `Ctrl+h/j/k/l` | Navegar entre splits |
 | `Ctrl+Shift+h/l` | Mover aba para esquerda ou direita |
-| `gr` | Aba anterior |
-| `,tn` | Nova aba (se vim-test nao interceptar — ver secao 8) |
+| `gr` | Aba anterior (`:tabprev`) |
+| `,tn` | Nova aba (se vim-test não interceptar — ver seção 8) |
 | `,tc` | Fechar aba |
 | `,to` | Fechar todas as outras abas (`:tabonly`) |
-| `,te` | Abrir aba no diretorio do arquivo atual |
-| `,tl` | Toggle entre esta aba e a ultima acessada |
-| `,tm <num>` | Mover aba para posicao `<num>` (interativo) |
-| `,t,` | Ir para proxima aba (`<leader>t<leader>` → `:tabnext`) |
+| `,te` | Abrir aba no diretório do arquivo atual |
+| `,tl` | Toggle entre esta aba e a última acessada |
+| `,tm <num>` | Mover aba para posição `<num>` (interativo) |
+| `,t,` | Ir para próxima aba (`<leader>t<leader>` → `:tabnext`) |
 
 **Buffers:**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
-| `,l` | Proximo buffer |
+| `,l` | Próximo buffer |
 | `,h` | Buffer anterior |
 | `,bd` | Fechar buffer atual (e a aba se ficar vazia) |
 | `,ba` | Fechar TODOS os buffers (`:bufdo bd`) |
-| `[b` / `]b` | Buffer anterior/proximo (vim-unimpaired — ver secao 6) |
+| `[b` / `]b` | Buffer anterior/próximo (vim-unimpaired — ver seção 6) |
 
 ---
 
-## 3. Edicao e Produtividade
+## 3. Edição e Produtividade
 
-**Edicao e busca:**
+**Edição e busca:**
 
-| Atalho | Acao | Plugin |
+| Atalho | Ação | Plugin |
 | :--- | :--- | :--- |
 | `Alt+j/k` | Mover linha para baixo/cima (`Cmd+j/k` no GVim macOS) | Nativo |
 | `,w` | Salvar (`:w!`) | Nativo |
 | `*` / `#` | Buscar palavra selecionada em visual mode | Nativo |
-| `F3` | Ligar/desligar realce de busca | Nativo |
+| `F3` **ou** `,hs` | Ligar/desligar realce de busca (`,hs` existe pra teclado sem teclas F) | Nativo |
 | `,<Enter>` | Desligar realce da busca atual (`:noh`) | Nativo |
 | `(visual) ,r` | Buscar-e-substituir o texto selecionado | Custom |
 | `,pp` | Ligar/desligar modo paste | Nativo |
-| `Ctrl+n` | Multiplos cursores (proxima ocorrencia — ver secao 15) | vim-visual-multi |
-| `,u` | Abrir arvore visual de undo | undotree |
+| `y` / `p` / `P` | Yank / paste (histórico de yank cicla com `,yn`/`,yp` — ver seção 22) **[Neovim: yanky.nvim]** | Nativo **[Vim]** / yanky.nvim **[Neovim]** |
+| `Ctrl+n` | Múltiplos cursores (próxima ocorrência — ver seção 15) | vim-visual-multi |
+| `,u` | Abrir árvore visual de undo | undotree |
 | `Ctrl+p` | Ligar/desligar auto-pairs | auto-pairs |
-| `,cd` | `cd` para o diretorio do arquivo atual (e mostra `pwd`) | Nativo |
+| `,cd` | `cd` para o diretório do arquivo atual (e mostra `pwd`) | Nativo |
 | `,m` | Remover caracteres `^M` (line endings Windows) | Nativo |
 
 **Scratch buffers (rascunho global):**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `,q` | Abrir scratch livre em `~/buffer` |
 | `,x` | Abrir scratch Markdown em `~/buffer.md` |
 
-**Corretor ortografico:**
+**Corretor ortográfico:**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `,ss` | Ligar/desligar corretor |
-| `,sn` | Proximo erro (`]s`) |
+| `,sn` | Próximo erro (`]s`) |
 | `,sp` | Erro anterior (`[s`) |
-| `,sa` | Adicionar palavra ao dicionario (`zg`) |
-| `,s?` | Sugerir correcoes para a palavra sob o cursor (`z=`) |
+| `,sa` | Adicionar palavra ao dicionário (`zg`) |
+| `,s?` | Sugerir correções para a palavra sob o cursor (`z=`) |
 
 **Linha de comando (`:` e `/`) — atalhos estilo Emacs/readline:**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
-| `Ctrl+A` | Ir para o inicio da linha |
+| `Ctrl+A` | Ir para o início da linha |
 | `Ctrl+E` | Ir para o fim da linha |
-| `Ctrl+K` | Apagar do cursor ate o fim da linha |
-| `Ctrl+P` / `Ctrl+N` | Comando anterior / proximo no historico |
+| `Ctrl+K` | Apagar do cursor até o fim da linha |
+| `Ctrl+P` / `Ctrl+N` | Comando anterior / próximo no histórico |
 
-> **Smart auto-pairs:** `(`, `[`, `{`, `"`, `'`, `` ` `` nao fecham automaticamente quando ha texto colado a **direita** do cursor.
+> **Smart auto-pairs:** `(`, `[`, `{`, `"`, `'`, `` ` `` não fecham automaticamente quando há texto colado à **direita** do cursor.
 
 ---
 
-## 4. vim-surround — Envolver texto
+## 4. Surround — Envolver texto
+
+Mesmos atalhos nos dois editores (`vim-surround` no Vim, `nvim-surround` no Neovim — comportamento idêntico por padrão).
 
 **Modo normal** (`ysiw` = word, `yss` = linha inteira, `ys2j` = 2 linhas):
 
@@ -134,67 +141,71 @@
 
 **Atalho custom:**
 
-| Sequencia | Resultado | Uso tipico |
+| Sequência | Resultado | Uso típico |
 | :--- | :--- | :--- |
-| `Si` (visual) | `(_selecao)` com cursor apos `)` | Captures Elixir (`&(_)`), lambdas com placeholder |
+| `Si` (visual) | `(_selecao)` com cursor após `)` | Captures Elixir (`&(_)`), lambdas com placeholder |
 
 ---
 
-## 5. LSP e Completion (CoC.nvim)
+## 5. LSP e Completion — **[Vim: CoC.nvim]**
 
-| Atalho | Acao |
+> No Neovim, o LSP é nativo — ver seção 16. **Não rode CoC e LSP nativo juntos**; o Vim continua 100% CoC.
+
+| Atalho | Ação |
 | :--- | :--- |
-| `Tab` / `Shift+Tab` | Proximo/anterior item do completion |
+| `Tab` / `Shift+Tab` | Próximo/anterior item do completion |
 | `Enter` | Confirmar completion |
 | `Ctrl+Space` | Triggerar completion manualmente |
 | `Ctrl+j` | Expandir/pular snippet |
-| `K` | Documentacao (hover popup) |
+| `K` | Documentação (hover popup) |
 | `Ctrl+]` / `Cmd+]` | Goto Definition |
-| `Ctrl+t` / `Cmd+[` | Voltar da definicao |
+| `Ctrl+t` / `Cmd+[` | Voltar da definição |
 | `gd` | Goto Definition (alternativo) |
 | `gy` | Goto Type Definition |
 | `gi` | Goto Implementation |
-| `,gr` | Listar todas as referencias |
-| `,rn` | Renomear simbolo em todo o projeto |
-| `,f` | Formatar selecao ou arquivo |
-| `,a` | Code Actions no cursor (normal) ou selecao (visual) |
-| `[g` / `]g` | Diagnostico anterior / proximo |
-| `Space+a` | Lista de todos os diagnosticos |
+| `,gr` | Listar todas as referências |
+| `,rn` | Renomear símbolo em todo o projeto |
+| `,f` | Formatar seleção ou arquivo |
+| `,a` | Code Actions no cursor (normal) ou seleção (visual) |
+| `[g` / `]g` | Diagnóstico anterior / próximo |
+| `Space+a` | Lista de todos os diagnósticos |
 | `Space+o` | Outline do documento |
-| `Space+s` | Buscar simbolos no workspace |
-| `Space+e` | Gerenciar extensoes CoC |
+| `Space+s` | Buscar símbolos no workspace |
+| `Space+e` | Gerenciar extensões CoC |
 | `Space+c` | Listar comandos CoC |
-| `Space+j/k` | Proximo/anterior na lista CoC ativa |
-| `Space+p` | Retomar ultima lista CoC |
+| `Space+j/k` | Próximo/anterior na lista CoC ativa |
+| `Space+p` | Retomar última lista CoC |
 | `:Format` | Formatar buffer inteiro |
 | `:OR` | Organizar imports |
 
-> **Scroll de hover/diagnostic float:** com um popup do CoC aberto (hover via `K`, signature, diagnostic), use `Ctrl+f` / `Ctrl+b` em **insert** ou **visual** mode para rolar o float. Em **normal** mode esses atalhos pertencem ao fzf (Files/Buffers — secao 1); fora de float aberto, `Ctrl+f` em insert vira `<Right>` e `Ctrl+b` vira `<Left>`.
+> **Scroll de hover/diagnostic float:** com um popup do CoC aberto (hover via `K`, signature, diagnostic), use `Ctrl+f` / `Ctrl+b` em **insert** ou **visual** mode para rolar o float. Em **normal** mode esses atalhos pertencem ao fzf; fora de float aberto, `Ctrl+f` em insert vira `<Right>` e `Ctrl+b` vira `<Left>`.
 
 ---
 
-## 6. Navegacao de Diagnosticos e Quickfix (vim-unimpaired)
+## 6. Navegação de Diagnósticos e Quickfix (vim-unimpaired)
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
-| `[g` / `]g` | Diagnostico CoC anterior/proximo |
-| `[q` / `]q` | Quickfix anterior/proximo |
-| `[l` / `]l` | Location list anterior/proximo |
-| `[b` / `]b` | Buffer anterior/proximo |
-| `[n` / `]n` | Conflito de merge anterior/proximo |
+| `[g` / `]g` | Diagnóstico CoC anterior/próximo **[Vim]** |
+| `[q` / `]q` | Quickfix anterior/próximo |
+| `[l` / `]l` | Location list anterior/próximo |
+| `[b` / `]b` | Buffer anterior/próximo |
+| `[n` / `]n` | Conflito de merge anterior/próximo |
 
 ---
 
 ## 7. Git
 
-| Atalho | Acao | Plugin |
+| Atalho | Ação | Plugin |
 | :--- | :--- | :--- |
-| `,gv` | Git log do projeto (navegavel) | gv.vim |
+| `,gv` | Git log do projeto (navegável) | gv.vim |
 | `,gV` | Git log do arquivo atual | gv.vim |
 | `,gm` | Popup com commit e autor da linha atual | Custom |
-| `,d` | Ligar/desligar diff no gutter | vim-gitgutter |
+| `,d` | Ligar/desligar diff no gutter (agora avisa ON/OFF) | vim-gitgutter **[Vim]** / gitsigns.nvim **[Neovim]** |
 | `:Git` | Interface completa do git | vim-fugitive |
 | `:Git blame` | Blame do arquivo | vim-fugitive |
+| `,gd` | Abrir diffview (tab dedicada, arquivo-por-arquivo) **[Neovim]** | diffview.nvim |
+| `,gc` | Fechar diffview **[Neovim]** | diffview.nvim |
 
 > **Dentro do `:GV`:** `Enter` abre o commit, `o` abre em split, `q` fecha.
 
@@ -202,39 +213,39 @@
 
 ## 8. Testes (vim-test + Vimux)
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `,tn` | Rodar teste **sob o cursor** |
 | `,tf` | Rodar todos os testes do **arquivo** |
 | `,ts` | Rodar a **suite inteira** |
-| `,tl` | Repetir **ultimo** teste |
-| `,tv` | Ir para o ultimo arquivo de teste |
+| `,tl` | Repetir **último** teste |
+| `,tv` | Ir para o último arquivo de teste |
 
-**Suporte automatico por linguagem:** Elixir (`mix test`), Ruby (`bundle exec rspec`), JS (Jest/Mocha), Python (pytest). Estrategia: Vimux (tmux).
+**Suporte automático por linguagem:** Elixir (`mix test`), Ruby (`bundle exec rspec`), JS (Jest/Mocha), Python (pytest). Estratégia: Vimux (tmux). Mesmo nos dois editores.
 
 ---
 
-## 9. Stacks Especificas
+## 9. Stacks Específicas
 
-| Atalho | Acao | Stack |
+| Atalho | Ação | Stack |
 | :--- | :--- | :--- |
-| `:A` | Alternar codigo / teste | Elixir, Ruby/Rails |
+| `:A` | Alternar código / teste | Elixir, Ruby/Rails |
 | `,mf` | Mix Format (manual) | Elixir |
 | `,md` | Mix Format Diff (preview) | Elixir |
 | `,lc` | `mix credo --strict` no tmux | Elixir |
 | `,ie` | Abrir IEx REPL no tmux | Elixir |
 | `:Emodel` / `:Econtroller` | Navegar para model/controller | Rails |
 
-**Auto-format ao salvar:** `.ex`, `.exs`, `.heex` (CoC + mix format)
+**Auto-format ao salvar:** `.ex`, `.exs`, `.heex` (CoC + mix format **[Vim]**; mix format sozinho **[Neovim]**, sem CoC)
 
 ---
 
 ## 10. Banco de Dados (vim-dadbod)
 
-| Atalho / Comando | Acao |
+| Atalho / Comando | Ação |
 | :--- | :--- |
 | `,db` | Abrir/fechar DB UI explorer |
-| `,dba` | Adicionar nova conexao |
+| `,dba` | Adicionar nova conexão |
 | `,dbf` | Encontrar buffer de query atual no explorer |
 | `,dbr` | Renomear buffer de query atual |
 | `:DB [url] [query]` | Executar SQL em split |
@@ -243,101 +254,105 @@
 
 ---
 
-## 11. Sessoes e Historico
+## 11. Sessões e Histórico
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
-| `,os` | Inicia/para tracking da sessao (`Session.vim` no CWD) |
-| `vim` (sem args) | Restaura sessao automaticamente se `Session.vim` existir |
-| `,u` | Abre arvore visual de undo (historico persistente) |
+| `,os` | Inicia/para tracking da sessão (`Session.vim` no CWD) |
+| `vim`/`nvim` (sem args) | Restaura sessão automaticamente se `Session.vim` existir |
+| `,u` | Abre árvore visual de undo (histórico persistente — **diretórios separados** entre Vim e Neovim, formatos incompatíveis) |
 
 ---
 
 ## 12. Terminal e Tmux (Vimux)
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `,vp` | Prompt para rodar comando no painel tmux |
-| `,vl` | Repetir ultimo comando |
+| `,vl` | Repetir último comando |
 | `,vq` | Fechar painel tmux |
 | `,vx` | Enviar `Ctrl+C` ao painel tmux |
 
 ---
 
-## 13. Foco e Misc
+## 13. Foco, Markdown e Misc
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
-| `,z` | Modo zen (Goyo — remove distracoes visuais) |
+| `,z` | Modo zen (Goyo — remove distrações visuais) |
 | `,e` | Editar configs.vim |
-| `,mdp` | Preview do Markdown |
-| `,mdt` | Inserir tabela Markdown |
-| `,mdl` | Listar comandos Markdown |
+| `,mdp` | Preview do Markdown (markdown-preview-enhanced) **[Vim]** |
+| `,mdt` | Inserir tabela Markdown **[Vim]** |
+| `,mdl` | Listar comandos Markdown **[Vim]** |
+| `,mg` | Preview estilo terminal via `glow` — `:vert term` sem pager **[Vim]** / janela flutuante `:Glow`, cor forçada, sem pager **[Neovim]** |
+| `,mr` | Liga/desliga a renderização inline de markdown (tabelas, headers, checkboxes) **[Neovim]** |
+| `,Mm` | Liga/desliga table-mode (realinha colunas ao digitar `\|`) — mesmo nos dois editores |
+| `,Mr` | Realinha uma tabela existente manualmente — **só existe depois de `,Mm` ligar** (mapping buffer-local, criado dinamicamente pelo próprio plugin) |
 
 ---
 
 ## 14. IA e Assistentes
 
-### Claude Code (vim-claude-code)
+### Claude Code (vim-claude-code) — **[Vim apenas]**
 
 **Terminal:**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `Ctrl+\` | Toggle terminal Claude Code (normal e terminal mode) |
-| `,cC` | Continuar sessao anterior (`--continue`) |
+| `,cC` | Continuar sessão anterior (`--continue`) |
 | `,cV` | Abrir em modo verbose |
 | `Ctrl+W z` | Maximizar/restaurar janela do terminal Claude |
 
-**Edicao** — funcionam em normal mode (arquivo inteiro) e visual mode (selecao):
+**Edição** — funcionam em normal mode (arquivo inteiro) e visual mode (seleção):
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
-| `,ce` | Explicar codigo / selecao |
-| `,cf` | Corrigir codigo / selecao |
-| `,cr` | Refatorar codigo / selecao |
-| `,ct` | Gerar testes para o codigo / selecao |
-| `,cd` | Gerar documentacao |
-| `,cn` | Renomear simbolo |
-| `,co` | Otimizar codigo / selecao |
+| `,ce` | Explicar código / seleção |
+| `,cf` | Corrigir código / seleção |
+| `,cr` | Refatorar código / seleção |
+| `,ct` | Gerar testes para o código / seleção |
+| `,cd` | Gerar documentação |
+| `,cn` | Renomear símbolo |
+| `,co` | Otimizar código / seleção |
 
 **Projeto** — normal mode:
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `,cG` | Gerar mensagem de commit |
 | `,cR` | Code review do arquivo atual |
 | `,cp` | Criar Pull Request |
-| `,cP` | Gerar plano de implementacao |
-| `,ca` | Analisar codigo / arquitetura |
+| `,cP` | Gerar plano de implementação |
+| `,ca` | Analisar código / arquitetura |
 | `,cD` | Debugging assistido |
 | `,cA` | Aplicar diff sugerido pelo Claude |
 
 **Chat e meta:**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `,cc` | Abrir chat livre com Claude |
 | `,cx` | Enviar contexto do buffer ao Claude |
 | `,cm` | Selecionar modelo Claude |
 
-> **Comando principal:** `:Claude <subcomando>` — todos os atalhos acima sao wrappers desse comando. Use `:Claude <Tab>` para completar. Subcomandos uteis: `version`, `doctor`, `preview install/status`.
+> **Comando principal:** `:Claude <subcomando>` — todos os atalhos acima são wrappers desse comando. Use `:Claude <Tab>` para completar.
+>
+> **No Neovim** este plugin é incompatível (checa `has('terminal')`, que o Neovim não implementa da mesma forma) e fica desligado — não há equivalente hoje. Use o `claude` CLI direto numa pane tmux ao lado.
 
----
+### Copilot Chat
 
-### Copilot Chat (copilot-chat.vim)
+| Atalho / Comando | Ação | Onde |
+| :--- | :--- | :--- |
+| `,pc` | Abrir chat Copilot | Ambos (plugin diferente por trás) |
+| `(visual) ,cq` | Perguntar ao Copilot sobre a seleção | Ambos |
+| `:CopilotChatToggle` | Toggle do painel de chat | **[Vim]** copilot-chat.vim |
+| `:CopilotChatModels` | Selecionar modelo | Ambos |
+| `:CopilotChatReset` | Limpar conversa atual | Ambos |
+| `:CopilotChatSave [nome]` | Salvar conversa | Ambos |
+| `:CopilotChatLoad [nome]` | Carregar conversa salva | Ambos |
 
-| Atalho / Comando | Acao |
-| :--- | :--- |
-| `,pc` | Abrir chat Copilot |
-| `(visual) ,cq` | Perguntar ao Copilot sobre a selecao |
-| `:CopilotChatToggle` | Toggle do painel de chat |
-| `:CopilotChatModels` | Selecionar modelo |
-| `:CopilotChatReset` | Limpar conversa atual |
-| `:CopilotChatSave [nome]` | Salvar conversa |
-| `:CopilotChatLoad [nome]` | Carregar conversa salva |
-| `:CopilotChatList` | Listar conversas salvas |
-| `:CopilotChatUsage` | Ver uso de tokens |
+> **No Neovim** é o `CopilotChat.nvim` (Lua) por trás do `,pc` — precisa de **`:Copilot auth`** uma vez (login interativo, abre browser) antes de funcionar.
 
 ---
 
@@ -345,7 +360,7 @@
 
 ### Nativo (`Ctrl+V`)
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `Ctrl+V` | Entrar em visual block mode |
 | `I` | Inserir texto ANTES do bloco em todas as linhas (confirmar com `Esc`) |
@@ -354,8 +369,8 @@
 | `d` / `x` | Deletar o bloco |
 | `r<char>` | Substituir todos os caracteres do bloco por `<char>` |
 | `>` / `<` | Indentar / desindentar o bloco |
-| `~` | Alternar maiusculas/minusculas |
-| `u` / `U` | Converter para minusculas / MAIUSCULAS |
+| `~` | Alternar maiúsculas/minúsculas |
+| `u` / `U` | Converter para minúsculas / MAIÚSCULAS |
 | `J` | Juntar as linhas do bloco |
 | `o` | Mover cursor para o canto oposto |
 
@@ -363,46 +378,187 @@
 
 ### vim-visual-multi (`Ctrl+N`) — multi-cursor
 
-O VM_leader deste plugin e `\` (barra invertida), independente do `<Leader>` do Vim.
+O VM_leader deste plugin é `\` (barra invertida), independente do `<Leader>` do Vim. **Mesmo nos dois editores** — cuidado se instalar plugins novos no Neovim que também usem `Ctrl+N`/`Ctrl+P` em modo normal (já aconteceu com `yanky.nvim`, corrigido — ver seção 22).
 
 **Entrada:**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
-| `Ctrl+N` | Selecionar proxima ocorrencia da palavra (normal) ou da selecao (visual) |
-| `\A` | Selecionar TODAS as ocorrencias de uma vez |
-| `\\` | Adicionar cursor na posicao atual |
+| `Ctrl+N` | Selecionar próxima ocorrência da palavra (normal) ou da seleção (visual) |
+| `\A` | Selecionar TODAS as ocorrências de uma vez |
+| `\\` | Adicionar cursor na posição atual |
 | `Ctrl+Down` / `Ctrl+Up` | Adicionar cursores verticalmente (coluna) |
-| `Shift+Down` / `Shift+Up` | Expandir selecao verticalmente |
-| `Shift+Right` / `Shift+Left` | Expandir selecao horizontalmente |
-| `(visual) \A` | Selecionar todas as ocorrencias da selecao atual |
-| `(visual) \c` | Criar cursores nos fins de linha da selecao |
-| `(visual) \f` | Usar selecao como padrao de busca |
+| `Shift+Down` / `Shift+Up` | Expandir seleção verticalmente |
+| `Shift+Right` / `Shift+Left` | Expandir seleção horizontalmente |
+| `(visual) \A` | Selecionar todas as ocorrências da seleção atual |
+| `(visual) \c` | Criar cursores nos fins de linha da seleção |
+| `(visual) \f` | Usar seleção como padrão de busca |
 
-**Dentro da sessao VM:**
+**Dentro da sessão VM:**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `Tab` | Alternar cursor mode ↔ extend mode |
-| `n` / `N` | Proxima / anterior ocorrencia |
-| `]` / `[` | Ir para proximo / anterior cursor |
-| `q` | Pular esta ocorrencia e ir para a proxima |
-| `Q` | Remover cursor/selecao atual |
+| `n` / `N` | Próxima / anterior ocorrência |
+| `]` / `[` | Ir para próximo / anterior cursor |
+| `q` | Pular esta ocorrência e ir para a próxima |
+| `Q` | Remover cursor/seleção atual |
 | `Esc` | Sair do vim-visual-multi |
 
-**Operacoes (dentro da sessao VM):**
+**Operações (dentro da sessão VM):**
 
-| Atalho | Acao |
+| Atalho | Ação |
 | :--- | :--- |
 | `\a` | Alinhar cursores na mesma coluna |
-| `\m` | Mesclar regioes sobrepostas |
-| `\t` | Transpor selecoes entre cursores |
-| `\d` | Duplicar cada regiao |
-| `\s` | Dividir regioes por padrao regex |
+| `\m` | Mesclar regiões sobrepostas |
+| `\t` | Transpor seleções entre cursores |
+| `\d` | Duplicar cada região |
+| `\s` | Dividir regiões por padrão regex |
 | `\N` / `\n` | Numerar sequencialmente (prefixo / sufixo) |
-| `S` | vim-surround em todas as selecoes |
+| `S` | vim-surround em todas as seleções |
 | `M` | Toggle modo multi-linha |
-| `\c` / `\C` | Case setting / menu de conversao |
+| `\c` / `\C` | Case setting / menu de conversão |
 
-> **Cursor mode** (padrao): comandos normais (`c`, `d`, `y`, `.`, etc.) operam em todos os cursores simultaneamente.
-> **Extend mode** (`Tab`): comandos visuais (`>`, `<`, `S`, etc.) operam em todas as selecoes.
+> **Cursor mode** (padrão): comandos normais (`c`, `d`, `y`, `.`, etc.) operam em todos os cursores simultaneamente.
+> **Extend mode** (`Tab`): comandos visuais (`>`, `<`, `S`, etc.) operam em todas as seleções.
+
+---
+
+# Neovim — exclusivo (não existe no Vim)
+
+`~/.config/nvim/init.vim` reaproveita 100% do `configs.vim` acima (mesmo arquivo, mesmos atalhos das seções 1–15) e acrescenta o que vem a seguir. Arquitetura completa em [`neovim.md`](neovim.md).
+
+## 16. LSP nativo (mason + nvim-lspconfig + blink.cmp)
+
+Substitui o CoC só no Neovim (CoC fica desligado lá, evita duplicar diagnostics/completion).
+
+| Atalho | Ação |
+| :--- | :--- |
+| `gd` | Goto Definition |
+| `gi` | Goto Implementation |
+| `K` | Hover (documentação) |
+| `grr` | Referências (nativo do Neovim ≥0.11 — **não** `gr`, que é `:tabprev` de sempre) |
+| `grn` | Rename (nativo do Neovim — equivalente a `,rn` abaixo) |
+| `gra` | Code action (nativo do Neovim — equivalente a `,ca` abaixo) |
+| `,rn` | Rename (nosso, mesma tecla do CoC) |
+| `,ca` | Code action (nosso, mesma tecla do CoC) |
+| `,fo` | Formatar buffer (via `conform.nvim` — prettier/etc) |
+
+**Completion (`blink.cmp`):**
+
+| Atalho | Ação |
+| :--- | :--- |
+| `Enter` | Aceita o item selecionado |
+| `Tab` / `Shift+Tab` | Desce/sobe na lista (ou avança/volta snippet) |
+| `↑` / `↓` | Navega na lista |
+| `Ctrl+Space` | Abre completion manualmente |
+| `Ctrl+y` | Aceita (alternativa) |
+| `Ctrl+e` | Cancela |
+
+**Inlay hints:** ligados automaticamente quando o servidor suporta (`gopls`, `ts_ls`/`typescript-tools`). **Python (`pyright`) não suporta** — é limitação do pyright open-source, só o Pylance (fechado, só-VSCode) tem isso.
+
+**Servidores por linguagem:** ver tabela completa em [`neovim.md`](neovim.md#lsp-por-linguagem).
+
+---
+
+## 17. Treesitter
+
+| Atalho | Ação |
+| :--- | :--- |
+| `af` / `if` | Text object de função (around/inner) — visual e operator-pending |
+| `ac` / `ic` | Text object de classe (around/inner) |
+| (automático) | Highlight, indent e fold (`foldmethod=expr`) via treesitter |
+| (automático) | `nvim-treesitter-context`: fixa a linha da função/classe atual no topo ao rolar |
+
+---
+
+## 18. Telescope (pickers de LSP)
+
+fzf.vim já cobre arquivos/grep/buffers/histórico (seção 1) — Telescope aqui é só pra LSP:
+
+| Atalho | Ação |
+| :--- | :--- |
+| `,fs` | Document symbols |
+| `,fw` | Workspace symbols |
+| `,fr` | References |
+| `,fd` | Diagnostics |
+
+---
+
+## 19. which-key.nvim
+
+Automático — aperte `,` sozinho e espere ~1s: aparece um popup flutuante com os grupos de atalhos disponíveis. Sem comando pra lembrar.
+
+---
+
+## 20. DAP (debugger) — Elixir, Go, Python, Ruby, JS/TS
+
+`nvim-dap` + `nvim-dap-ui`. Teclas F **e** equivalentes `,d*` (pra teclado sem teclas F):
+
+| Tecla F | Equivalente `,d*` | Ação |
+| :--- | :--- | :--- |
+| `F5` | `,dc` | Continue |
+| `F9` | `,dt` | Toggle breakpoint |
+| `F10` | `,do` | Step over |
+| `F11` | `,di` | Step into |
+| `F12` | `,dO` (O maiúsculo) | Step out |
+
+**Adapter por linguagem:**
+
+| Linguagem | Adapter | Pré-requisito |
+| :--- | :--- | :--- |
+| Elixir | Embutido no `elixir-ls` (mason) | Nenhum extra |
+| Go | `nvim-dap-go` | `go install github.com/go-delve/delve/cmd/dlv@latest` |
+| Python | `nvim-dap-python` | `debugpy` (mason instala sozinho) |
+| Ruby | `nvim-dap-ruby` | `rdbg` — gem `debug`, Ruby ≥3.1 no PATH do projeto (rbenv/asdf) |
+| JS/TS | `nvim-dap-vscode-js` (mason: `js-debug-adapter`) | Nenhum extra |
+
+---
+
+## 21. Markdown — render-markdown.nvim + glow.nvim
+
+Ver também seção 13 (`,mg`, `,mr`, `,Mm`/`,Mr` — compartilhados/anotados lá).
+
+- **Renderização inline** (`,mr` liga/desliga): tabelas, headers e checkboxes viram visual direto no buffer via treesitter. Célula da tabela configurada como `raw` (não `padded`) — evita a coluna inteira esticar quando uma célula tem texto grande. Pra ler uma tabela grande direito, use `,mg` (glow) — só ele reflui/quebra texto de verdade.
+- **`,mg` → `:Glow`**: janela flutuante a 90% da tela, buffer normal (rola com `j`/`k`/`gg`/`G`), `q`/`Esc` fecha, cor forçada (`CLICOLOR_FORCE=1`) mesmo sem pty real.
+
+---
+
+## 22. flash.nvim, harpoon2, trouble.nvim, diffview.nvim
+
+| Atalho | Ação | Plugin |
+| :--- | :--- | :--- |
+| `s` (normal/visual/operator-pending) | Jump com labels — salta pra qualquer palavra visível na tela | flash.nvim |
+| `,ha` | Marca o arquivo atual (harpoon) | harpoon2 |
+| `,hh` | Abre o menu de arquivos marcados | harpoon2 |
+| `,h1` .. `,h4` | Pula direto pro arquivo marcado 1–4 | harpoon2 |
+| `,tt` | Lista de diagnostics num split | trouble.nvim |
+| `,tq` | Lista de quickfix num split | trouble.nvim |
+| `,gd` | Abre diffview (revisão de diff em tab dedicada) | diffview.nvim (também seção 7) |
+| `,gc` | Fecha diffview | diffview.nvim |
+| `,yn` / `,yp` | Cicla pro próximo/anterior item do histórico de yank (depois de `p`) | yanky.nvim |
+
+> `S` (maiúsculo) do flash **não** foi mapeado de propósito — colidiria com o `S` visual do surround (seção 4), que é mais usado.
+> `,ha`/`,hh` coexistem com `,h` = `:bprevious` (seção 2) — Vim espera o `timeoutlen` pra desambiguar, mesmo padrão já aceito em `,md`/`,mdp`.
+
+---
+
+## 23. Python — ruff, venv-selector
+
+| Atalho | Ação |
+| :--- | :--- |
+| `,pv` | Selecionar virtualenv Python (reconfigura LSP e terminal integrado sem restart) |
+| (automático) | `ruff` roda como LSP adicional ao `pyright` — lint/fix/organize-imports rápido, hover desligado (não duplica com o hover do pyright) |
+
+---
+
+## 24. O que foi cogitado e **não** instalado (e por quê)
+
+| Plugin | Por que não |
+| :--- | :--- |
+| `vim.pack` (plugin manager nativo do Neovim 0.12) | `lazy.nvim` já funciona bem — trocar sem necessidade é churn |
+| `toggleterm.nvim` | Redundante com `vimux`, que já resolve isso via tmux (seção 12) |
+| `neotest` | Redundante com `vim-test`+`vimux` (seção 8) — mudaria o hábito, não complementaria |
+| `avante.nvim` / `codecompanion.nvim` | Redundante — já tem Copilot Chat + Claude Code CLI |
+| Next LS / Lexical (Elixir) | Projeto novo oficial "Expert" (fusão de Next LS + Lexical + ElixirLS) sem data de lançamento — só ficar de olho |
+| `typescript-language-server` (`ts_ls`) | **Substituído** por `typescript-tools.nvim` (mais rápido, fala direto com o `tsserver`) — decisão tomada, não pendência |

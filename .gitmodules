@@ -157,3 +157,11 @@
 [submodule "plugins/vim-tmux-navigator"]
 	path = plugins/vim-tmux-navigator
 	url = https://github.com/christoomey/vim-tmux-navigator.git
+[submodule "plugins/vim-which-key"]
+	path = plugins/vim-which-key
+	url = https://github.com/liuchengxu/vim-which-key
+	ignore = dirty
+[submodule "plugins/vim-table-mode"]
+	path = plugins/vim-table-mode
+	url = https://github.com/dhruvasagar/vim-table-mode
+	ignore = dirty

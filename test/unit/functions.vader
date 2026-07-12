@@ -92,3 +92,69 @@ Execute (UT-055 popup_create e popup_close funcionam corretamente):
         \ 'popup nao foi removido por popup_close'
 After:
   silent! call popup_close(test_id)
+
+" ─────────────────────────────────────────────────────────────────────────────
+" UT-100 a UT-101: s:StartScreenLines() — conteudo puro (sem guard, sem buffer)
+" Roda dentro do Vader (has('nvim') sempre 0 aqui), entao so o branch Vim e
+" alcancavel neste teste — o branch Neovim nao tem suite automatizada ainda
+" (ver docs/neovim.md). Confirma que o branch certo e escolhido e que o
+" conteudo especifico do Neovim NAO vaza pro lado Vim.
+" ─────────────────────────────────────────────────────────────────────────────
+
+Execute (UT-100 StartScreenLines mostra CoC no Vim, nao LSP nativo):
+  let StartScreenLines = function('<SNR>' . g:configs_sid . '_StartScreenLines')
+  let lines = StartScreenLines()
+  let joined = join(lines, "\n")
+  Assert joined =~# 'LSP (CoC)', 'StartScreenLines deveria mencionar "LSP (CoC)" no Vim'
+  Assert joined !~# 'LSP (nativo)', 'StartScreenLines vazou conteudo do Neovim pro Vim'
+  Assert joined =~# '^\n\s*Vim \d\+\.\d\+', 'StartScreenLines deveria comecar com a versao do Vim'
+
+Execute (UT-101 StartScreenLines nao mostra atalhos exclusivos do Neovim):
+  let StartScreenLines = function('<SNR>' . g:configs_sid . '_StartScreenLines')
+  let joined = join(StartScreenLines(), "\n")
+  Assert joined !~# 'Flash jump', 'flash.nvim e so-Neovim, nao deveria aparecer no Vim'
+  Assert joined !~# 'Harpoon', 'harpoon2 e so-Neovim, nao deveria aparecer no Vim'
+  Assert joined =~# 'Claude Code (toggle)', 'vim-claude-code e so-Vim, deveria aparecer'
+
+Execute (UT-102 StartScreenLines retorna List nao-vazia e e idempotente):
+  let StartScreenLines = function('<SNR>' . g:configs_sid . '_StartScreenLines')
+  let first = StartScreenLines()
+  Assert type(first) == type([]), 'StartScreenLines deveria retornar uma List'
+  Assert len(first) > 0, 'StartScreenLines nao deveria retornar lista vazia'
+  AssertEqual 'Pressione qualquer tecla para começar...', trim(first[-1]),
+        \ 'ultima linha deveria ser o prompt "pressione qualquer tecla"'
+  " Pura: chamar de novo (sem abrir buffer entre as chamadas) tem que dar
+  " o mesmo resultado — se algum dia alguem colar estado mutavel (contador,
+  " cache, etc.) aqui dentro, isso pega.
+  AssertEqual first, StartScreenLines(),
+        \ 'StartScreenLines deveria ser pura — duas chamadas seguidas tem que ser identicas'
+
+" ─────────────────────────────────────────────────────────────────────────────
+" UT-103 a UT-104: s:StartScreen() — o guard real, nunca coberto antes do
+" refactor (so o conteudo puro tinha teste). Cobre os dois early-returns que
+" fazem sentido simular num buffer existente: buffer com conteudo, e "estamos
+" rodando dentro do Vader" (esse ultimo e sempre verdade nestes testes, entao
+" e coberto de graca por qualquer teste que chame StartScreen() aqui).
+" ─────────────────────────────────────────────────────────────────────────────
+
+Execute (UT-103 StartScreen nao mexe em buffer que ja tem conteudo):
+  let StartScreen = function('<SNR>' . g:configs_sid . '_StartScreen')
+  new
+  call setline(1, ['conteudo real', 'que nao pode sumir'])
+  call StartScreen()
+  AssertEqual ['conteudo real', 'que nao pode sumir'], getline(1, '$'),
+        \ 'StartScreen sobrescreveu um buffer que ja tinha conteudo — guard falhou'
+After:
+  bdelete!
+
+Execute (UT-104 StartScreen nao mexe em buffer vazio rodando dentro do Vader):
+  " exists(':Vader') e verdade aqui dentro por definicao — e exatamente o
+  " guard que existe pra StartScreen nunca vazar pra dentro de uma suite de
+  " teste. Buffer novo e vazio (a condicao que MOSTRARIA a tela fora de teste).
+  let StartScreen = function('<SNR>' . g:configs_sid . '_StartScreen')
+  new
+  call StartScreen()
+  AssertEqual [''], getline(1, '$'),
+        \ 'StartScreen desenhou a tela dentro do Vader — guard do exists(":Vader") falhou'
+After:
+  bdelete!

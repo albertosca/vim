@@ -3,6 +3,9 @@ temp_dirs/undodir/*
 !temp_dirs/undodir/.gitignore
 !temp_dirs/undodir/README.md
 
+# Idem, formato de undo do Neovim (incompatível com o do Vim — dir separado)
+temp_dirs/undodir-nvim/*
+
 # OS
 .DS_Store
 

@@ -1,8 +1,10 @@
-# Vim Setup (Vim 9.1+)
+# Vim Setup (Vim 9.1+, com suporte a Neovim)
 
 Setup profissional para desenvolvimento poliglota: **Elixir/Phoenix, Ruby/Rails, JS/React/Node, Python, Go, Rust**.
 
-CoC.nvim como LSP client, fzf como busca unificada, e 328 testes automatizados. Veja [Créditos](#créditos).
+CoC.nvim como LSP client, fzf como busca unificada, e 344 testes automatizados. Veja [Créditos](#créditos).
+
+**Funciona também no Neovim** (dual-boot, sem duplicar nenhuma config) — LSP nativo, treesitter, telescope e mais. Ver [`docs/neovim.md`](docs/neovim.md).
 
 ## Estrutura
 
@@ -16,7 +18,8 @@ vimrcs/
 plugins/                 ← 49 plugins (Pathogen)
 test/                    ← suite de testes (vader, jest, shell)
 docs/                    ← documentacao
-  keybindings.md         ← cheatsheet completo de atalhos
+  keybindings.md         ← cheatsheet completo de atalhos (Vim e Neovim)
+  neovim.md              ← arquitetura, plugins e bugs resolvidos do lado Neovim
   test_plan.md           ← plano e arquitetura de testes
 ```
 
@@ -95,7 +98,7 @@ exemplos e o criterio **fica local vs. abre PR**:
 - **Fica local** (so seu): mappings, colorscheme, opcoes de gosto, paths da maquina.
 - **Abre um PR** (melhora pra todos): trocar/adicionar um plugin, corrigir bug ou default ruim.
 
-## Plugins (49)
+## Plugins (51)
 
 | Categoria | Plugins |
 |---|---|
@@ -104,17 +107,19 @@ exemplos e o criterio **fica local vs. abre PR**:
 | **Busca** | fzf, fzf.vim |
 | **Navegacao** | NERDTree, vim-rooter, vim-projectionist, vim-rails, vim-tmux-navigator |
 | **Git** | vim-fugitive, vim-gitgutter, gv.vim |
-| **Edicao** | vim-surround, auto-pairs, vim-visual-multi, vim-commentary, vim-endwise, vim-repeat, tabular, vim-expand-region, vim-indent-object, vim-unimpaired, vim-abolish, vim-closetag, vim-matchup, vim-sleuth |
+| **Edicao** | vim-surround, auto-pairs, vim-visual-multi, vim-commentary, vim-endwise, vim-repeat, tabular, vim-expand-region, vim-indent-object, vim-unimpaired, vim-abolish, vim-closetag, vim-matchup, vim-sleuth, vim-which-key, vim-table-mode |
 | **Testes** | vim-test, vimux |
 | **Linguagens** | vim-elixir, vim-mix-format, vim-go, rust.vim, vim-jsx-improve, vim-js-pretty-template, vim-mdx-js, vim-markdown |
 | **Database** | vim-dadbod, vim-dadbod-ui, vim-dadbod-completion |
 | **UI** | lightline.vim, gruvbox, vim-devicons, vim-nerdtree-syntax-highlight, undotree, goyo.vim, vim-obsession, set_tabline |
 
+> **Neovim** usa um conjunto de plugins Lua próprio (`lazy.nvim`, fora deste diretório) — ver [`docs/neovim.md`](docs/neovim.md) pro inventário completo (LSP nativo, treesitter, telescope, DAP, etc.).
+
 **Atualizar plugins:** veja o guia em **[docs/updating-plugins.md](docs/updating-plugins.md)**.
 
 ## Atalhos
 
-`mapleader` = `,` (virgula). Cheatsheet completo em **[docs/keybindings.md](docs/keybindings.md)**.
+`mapleader` = `,` (virgula). Cheatsheet completo em **[docs/keybindings.md](docs/keybindings.md)** (Vim e Neovim — seções 16+ são exclusivas do Neovim: LSP nativo, treesitter, DAP, flash/harpoon/trouble/diffview, etc.).
 
 Destaques:
 
@@ -153,7 +158,7 @@ Destaques:
 
 ## Testes
 
-328 testes automatizados em 5 suites:
+344 testes automatizados em 5 suites:
 
 ```bash
 bash test/run.sh          # compacto — uma linha por suite
@@ -165,13 +170,13 @@ bash test/run.sh unit     # rodar uma suite especifica
 ```
   Vim Config Test Suite
   ─────────────────────────────────────────────────────
-  ✓  shell            60 passed  1 warn  0 failed
-  ✓  unit             90 passed  0 failed
-  ✓  integration      131 passed  0 failed
+  ✓  shell            66 passed  1 warn  0 failed
+  ✓  unit             97 passed  0 failed
+  ✓  integration      134 passed  0 failed
   ✓  e2e              19 passed  0 failed
   ✓  jest             28 passed  0 failed
   ─────────────────────────────────────────────────────
-  ✓ 328 passed   all green
+  ✓ 344 passed   all green
 ```
 
 Detalhes da arquitetura de testes em **[docs/test_plan.md](docs/test_plan.md)**.

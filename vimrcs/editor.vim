@@ -34,8 +34,15 @@ autocmd! bufwritepost ~/.vim_runtime/configs.vim source ~/.vim_runtime/configs.v
 " => Turn persistent undo on
 "    means that you can undo even when you close a buffer/VIM
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Vim e Neovim têm formatos de undo file binários incompatíveis entre si
+" (divergiram desde o fork) — diretório separado evita o aviso "incompatible
+" undo file" ao abrir no outro editor o mesmo arquivo editado antes.
 try
-    set undodir=~/.vim_runtime/temp_dirs/undodir
+    if has('nvim')
+      set undodir=~/.vim_runtime/temp_dirs/undodir-nvim
+    else
+      set undodir=~/.vim_runtime/temp_dirs/undodir
+    endif
     set undofile
 catch
 endtry

@@ -60,7 +60,9 @@ coc-webview, coc-xml, coc-yaml, coc-yank
 
 ## Verificar que está funcionando
 
-Após a instalação e o primeiro run, rode estes checks:
+Sinal mais simples de tudo: abra `vim` (ou `nvim`) **sem nenhum argumento** — deve aparecer uma tela de boas-vindas com uma mini cheatsheet de atalhos (conteúdo adaptado por editor). Se aparecer, o `configs.vim` carregou corretamente.
+
+Depois, rode estes checks:
 
 - **`:CocInfo`** — mostra a versão do CoC, o Node detectado e qualquer problema de configuração
 - **`:checkhealth`** — diagnóstico geral do Vim e dos plugins carregados
@@ -119,7 +121,30 @@ Esses LSPs não vêm por padrão — ver tabela "LSP por linguagem" acima para o
 
 ---
 
+---
+
+## Neovim (opcional, dual-boot)
+
+Este mesmo repo funciona também no Neovim — nenhum arquivo é duplicado, `~/.config/nvim/init.vim` reaproveita `configs.vim`/`vimrcs/*.vim` inteiros. Arquitetura completa, inventário de plugins e bugs já resolvidos em [`neovim.md`](neovim.md).
+
+**Instalação:**
+
+```bash
+brew install neovim tree-sitter-cli go ruby
+```
+
+- `tree-sitter-cli`: compila os parsers do treesitter — **não vem** junto do `brew install neovim`.
+- `go`: precisa pro `gopls`/`sqls`/debugger de Go.
+- `ruby`: é keg-only (não sobrescreve o Ruby do sistema) — precisa adicionar ao PATH manualmente, ver `neovim.md`.
+
+**Primeiro run:** abrir `nvim` dispara o bootstrap do `lazy.nvim` (clona os plugins) e do `mason.nvim` (baixa os LSP servers/DAP adapters/formatters). Leva alguns minutos na primeira vez, precisa de internet.
+
+**Verificar que está funcionando:** `:checkhealth` (diagnóstico geral) e `:Mason` (status de cada servidor/ferramenta).
+
+---
+
 ## Ver também
 
-- [`keybindings.md`](keybindings.md) — cheatsheet completo de atalhos
+- [`keybindings.md`](keybindings.md) — cheatsheet completo de atalhos (Vim e Neovim)
+- [`neovim.md`](neovim.md) — arquitetura, inventário de plugins e bugs resolvidos do lado Neovim
 - [`updating-plugins.md`](updating-plugins.md) — como atualizar plugins com segurança

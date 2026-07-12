@@ -96,9 +96,9 @@ Execute (IT-051 leader-gm mapeado para GitMessenger):
   let m = maparg(',gm', 'n')
   Assert m =~# 'GitMessenger', ',gm nao mapeia para GitMessenger: ' . m
 
-Execute (IT-052 leader-cs mapeado para copiar nome do arquivo):
+Execute (IT-052 leader-cs mapeado para copiar caminho relativo ao cwd):
   let m = maparg(',cs', 'n')
-  Assert m =~# 'expand.*%:t', ',cs nao contém expand("%:t"): ' . m
+  Assert m =~# 'expand.*%:\.', ',cs nao contém expand("%:."): ' . m
 
 Execute (IT-053 leader-cl mapeado para copiar caminho completo):
   let m = maparg(',cl', 'n')
@@ -325,6 +325,46 @@ Execute (IT-157 Ctrl-backslash mapeado para Claude toggle):
 " IT-159: Markdown — glow preview
 " ─────────────────────────────────────────────────────────────────────────────
 
-Execute (IT-159 leader-mg mapeado para glow preview):
+Execute (IT-159 leader-mg mapeado para glow preview, exato):
+  " Match exato, nao so substring — pega regressao de flag trocada/removida
+  " (ex: -p voltar, -w com valor errado, split virar horizontal) que um
+  " regex frouxo deixaria passar.
   let m = maparg(',mg', 'n')
-  Assert m =~# 'glow', ',mg nao mapeia para glow: ' . m
+  AssertEqual ':vert term glow -w 100 %<CR>', m,
+        \ ',mg deveria ser exatamente vert term + glow -w 100, sem -p: ' . m
+
+" ─────────────────────────────────────────────────────────────────────────────
+" IT-160: hlsearch toggle sem depender de teclas F
+" ─────────────────────────────────────────────────────────────────────────────
+
+Execute (IT-160 leader-hs mapeado para toggle hlsearch, igual F3):
+  let m = maparg(',hs', 'n')
+  Assert m =~# 'hlsearch', ',hs nao mapeia para hlsearch: ' . m
+  let f3 = maparg('<F3>', 'n')
+  AssertEqual f3, m, ',hs deveria fazer a mesma coisa que F3'
+  " noremap — protege contra recursao se algum dia ,hs virar RHS de outro
+  " mapping (ou se hlsearch! for redefinido em cima de outra tecla)
+  let info = maparg(',hs', 'n', 0, 1)
+  AssertEqual 1, info.noremap, ',hs deveria ser noremap (nnoremap), nao recursivo'
+
+" ─────────────────────────────────────────────────────────────────────────────
+" IT-161: table-mode — ,Mr so existe com table-mode ligado (buffer-local)
+" ─────────────────────────────────────────────────────────────────────────────
+
+Execute (IT-161 leader-Mr nao existe antes de ligar table-mode):
+  new
+  Assert empty(maparg(',Mr', 'n')),
+        \ ',Mr nao deveria existir antes de ,Mm ligar o table-mode (e buffer-local, criado sob demanda)'
+After:
+  bdelete!
+
+Execute (IT-162 leader-Mr aparece depois de ,Mm ligar, e some ao desligar):
+  new
+  call tablemode#Toggle()
+  Assert !empty(maparg(',Mr', 'n')),
+        \ ',Mr deveria existir com table-mode ligado neste buffer'
+  call tablemode#Toggle()
+  Assert empty(maparg(',Mr', 'n')),
+        \ ',Mr deveria sumir de novo ao desligar o table-mode'
+After:
+  bdelete!

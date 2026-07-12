@@ -5,6 +5,13 @@ set cursorline
 highlight ColorColumn ctermbg=235 guibg=#2c2d27
 let &colorcolumn="100,".join(range(100,999),",")
 
+" No Neovim, termguicolors (ligado em vimrcs/filetypes.vim quando dentro do
+" tmux) renderiza RGB exato — mais vibrante que a paleta 256 cores aproximada
+" que o Vim usa. 'soft' suaviza o contraste/dureza do gruvbox pra compensar.
+if has('nvim')
+  let g:gruvbox_contrast_dark = 'soft'
+endif
+
 " Default colorscheme
 colorscheme gruvbox
 set background=dark    " Setting dark mode
@@ -18,8 +25,14 @@ nnoremap <leader>mdp :CocCommand markdown-preview-enhanced.openPreview<CR>
 nnoremap <leader>mdt :CocCommand markdown-preview-enhanced.insertTable<CR>
 nnoremap <leader>mdl :CocList --input=markdown-preview-enhanced. commands<CR>
 
-" glow: preview estilo terminal (requer `glow` instalado)
-nnoremap <leader>mg :vert term glow -p %<CR>
+" glow: preview estilo terminal (requer `glow` instalado).
+" Sem -p (pager): o pager é interativo e não rola com os comandos normais do
+" Vim (precisa mandar teclas pro próprio glow em modo terminal — confuso).
+" Sem -p, o glow só imprime tudo e sai; o resultado fica como texto normal
+" no buffer do terminal, rolável com <C-d>/<C-u>/gg/G depois de <C-\><C-n>
+" (sair do modo terminal). -w 100: largura de quebra explícita, mesma do
+" colorcolumn — evita quebra cedo demais mesmo com a metade da tela do vert.
+nnoremap <leader>mg :vert term glow -w 100 %<CR>
 
 " vim-markdown: conceal e frontmatter
 let g:vim_markdown_conceal = 1
@@ -30,6 +43,11 @@ augroup ft_markdown
   autocmd!
   autocmd FileType markdown setlocal conceallevel=2
 augroup END
+
+" vim-table-mode: prefixo próprio (,M) — o padrão dele é ,tm, que colide com
+" ,tm = :tabmove (vimrcs/options.vim). ,Mm liga/desliga o modo (realinha
+" colunas sozinho ao digitar |); ,Mr realinha manualmente.
+let g:table_mode_map_prefix = '<Leader>M'
 
 "Sets numbers to be always shown
 set nu
@@ -59,12 +77,14 @@ set scrolloff=8         "Start scrolling when we're 8 lines away from margins
 set sidescrolloff=15
 set sidescroll=1
 
-" Search highlight off by default, F3 to toggle
+" Search highlight off by default, F3 (ou ,hs, pra teclado sem teclas F) to toggle
 set nohlsearch
 nnoremap <F3> :set hlsearch!<CR>
+nnoremap <leader>hs :set hlsearch!<CR>
 
-" Copy current filename (,cs) and full path (,cl) to clipboard
-nnoremap <silent> <leader>cs :let @+=expand("%:t")<CR>:echo 'Copied: ' . expand('%:t')<CR>
+" Copy current filename relative to cwd (,cs — com vim-rooter, é relativo à
+" raiz do projeto) and full absolute path (,cl) to clipboard
+nnoremap <silent> <leader>cs :let @+=expand("%:.")<CR>:echo 'Copied: ' . expand('%:.')<CR>
 nnoremap <silent> <leader>cl :let @+=expand("%:p")<CR>:echo 'Copied: ' . expand('%:p')<CR>
 
 " =============================================================================
@@ -103,9 +123,12 @@ let g:db_ui_use_nerd_fonts = 1
 let g:db_ui_show_database_icon = 1
 
 " dadbod-completion: enable in SQL and dadbod buffers
+" (coc#config só existe com coc.nvim ativo — Vim; Neovim usa blink.cmp/lsp.lua)
 augroup DadbodCompletion
   autocmd!
-  autocmd FileType sql,mysql,plsql call coc#config('suggest.autoTrigger', 'always')
+  if !has('nvim')
+    autocmd FileType sql,mysql,plsql call coc#config('suggest.autoTrigger', 'always')
+  endif
 augroup end
 
 " =============================================================================
@@ -197,12 +220,18 @@ set foldmethod=manual
 set foldlevel=99
 augroup coc_folding
   autocmd!
-  autocmd FileType typescript,json,javascript,python,go,elixir setl formatexpr=CocAction('formatSelected')
+  if !has('nvim')
+    autocmd FileType typescript,json,javascript,python,go,elixir setl formatexpr=CocAction('formatSelected')
+  endif
 augroup end
 
 " =============================================================================
-" CoC (Conquer of Completion) Configuration
+" CoC (Conquer of Completion) Configuration — Vim apenas.
+" No Neovim, o LSP nativo (lsp.lua: mason + nvim-lspconfig + blink.cmp) cobre
+" completion/gd/gr/K/rename/code action; ver ~/.claude/plans/squishy-crafting-clover.md.
 " =============================================================================
+if !has('nvim')
+
 " Better performance for CoC
 set updatetime=300
 set shortmess+=c
@@ -318,6 +347,8 @@ nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
 " coc-snippets: expand and jump
 imap <C-j> <Plug>(coc-snippets-expand-jump)
 
+endif " !has('nvim')
+
 " Endwise: disable default mapping (coc handles insert-mode <CR>)
 let g:endwise_no_mappings = 1
 
@@ -360,6 +391,16 @@ let g:coc_global_extensions = [
 " via InsertEnter DEPOIS do auto-pairs (que registrou o autocmd antes)
 " =============================================================================
 let g:AutoPairsShortcutToggle = '<C-p>'
+
+" auto-pairs reconstrói o <CR> concatenando texto com o mapping que já
+" existia (pra encadear com outros plugins de <CR>) — funciona com CoC (Vim,
+" mapping em texto puro) mas quebra com blink.cmp (Neovim, mapping é uma
+" referência Lua interna, não texto): a reconstrução vira lixo e insere o
+" nome da função literalmente no buffer. No Neovim, blink.cmp já cuida do
+" <CR> sozinho (aceita completion, senão quebra linha normal).
+if has('nvim')
+  let g:AutoPairsMapCR = 0
+endif
 
 function! s:SmartPair(open, close) abort
   let next = getline('.')[col('.')-1]
@@ -497,7 +538,8 @@ nmap <silent> <leader>gm :call <SID>GitMessenger()<CR>
 augroup UndoCleanup
   autocmd!
   autocmd VimEnter * silent! call timer_start(3000, {-> system(
-        \ 'find ' . expand('~/.vim_runtime/temp_dirs/undodir') .
+        \ 'find ' . expand('~/.vim_runtime/temp_dirs/undodir') . ' ' .
+        \ expand('~/.vim_runtime/temp_dirs/undodir-nvim') .
         \ ' -type f -mtime +90 -delete 2>/dev/null &')})
 augroup end
 
@@ -543,16 +585,87 @@ let g:claude_code_split_ratio = 0.4
 nnoremap <silent> <c-\> <Nop>
 
 " =============================================================================
-" copilot-chat.vim — Chat com Copilot dentro do Vim
+" copilot-chat.vim — Chat com Copilot dentro do Vim. Vim apenas — no Neovim
+" (Vim9script incompatível, ver Fase 1) os mesmos atalhos são remapeados
+" pro CopilotChat.nvim em user/copilot.lua.
 " Nota: ,c* é reservado para vim-claude-code (explain, fix, refactor, etc.)
 " =============================================================================
+if !has('nvim')
 " ,pc → abre o chat Copilot   visual ,cq → pergunta sobre seleção
 nnoremap <leader>pc :CopilotChatOpen<CR>
 xnoremap <leader>cq :CopilotChat<space>
+endif
 
 " =============================================================================
 " Startup screen — atalhos úteis ao abrir Vim sem argumentos
 " =============================================================================
+" Conteúdo puro (sem guard, sem tocar em buffer) — separado de s:StartScreen()
+" só pra ser testável direto via function('<SNR>N_StartScreenLines').
+function! s:StartScreenLines() abort
+  if has('nvim')
+    let lines = [
+          \ '',
+          \ '    Neovim ' . luaeval("vim.version().major..'.'..vim.version().minor..'.'..vim.version().patch") . '   —   ,e editar configs.vim',
+          \ '',
+          \ '    BUSCA                          LSP (nativo)',
+          \ '    Ctrl+f  Arquivos (fzf)         K       Documentação',
+          \ '    Ctrl+b  Buffers                gd      Goto definition',
+          \ '    ,gf     Git files              ,rn     Renomear símbolo (grn)',
+          \ '    ,rg     Ripgrep (conteúdo)     ,ca     Code actions (gra)',
+          \ '    ,bl     Linhas do buffer       grr     Referências',
+          \ '    ,ht     Histórico              ,fd     Diagnósticos (Telescope)',
+          \ '    ,nn     Neo-tree               ,fs     Document symbols',
+          \ '                                   ,fo     Formatar buffer',
+          \ '    GIT                             TREESITTER',
+          \ '    ,gv     Log do projeto          af if   Função (text object)',
+          \ '    ,gV     Log do arquivo          ac ic   Classe (text object)',
+          \ '    ,gm     Blame da linha',
+          \ '    ,d      Toggle gitsigns         DEBUG (DAP)',
+          \ '    ,gd     Diffview                ,dc     Continue',
+          \ '                                    ,dt     Toggle breakpoint',
+          \ '    NAVEGAÇÃO                       SESSÃO',
+          \ '    s       Flash jump              ,os     Obsession on/off',
+          \ '    ,ha ,hh Harpoon                 ,u      Undotree',
+          \ '    ,tt     Trouble (diagnostics)   :A      Código <> Teste',
+          \ '',
+          \ '    IA',
+          \ '    ,pc     Copilot Chat (:Copilot auth na 1a vez)',
+          \ '',
+          \ '    Pressione qualquer tecla para começar...',
+          \ ]
+  else
+    let lines = [
+          \ '',
+          \ '    Vim ' . v:version/100 . '.' . v:version%100 . '   —   ,e editar configs.vim',
+          \ '',
+          \ '    BUSCA                          LSP (CoC)',
+          \ '    Ctrl+f  Arquivos (fzf)         K       Documentação',
+          \ '    Ctrl+b  Buffers                gd      Goto definition',
+          \ '    ,gf     Git files              ,rn     Renomear símbolo',
+          \ '    ,rg     Ripgrep (conteúdo)     ,a      Code actions',
+          \ '    ,bl     Linhas do buffer       ,gr     Referências',
+          \ '    ,ht     Histórico              [g ]g   Diagnóstico prev/next',
+          \ '    ,nn     NERDTree               Space+a Todos diagnósticos',
+          \ '                                   Space+o Outline',
+          \ '    GIT                             :Format :OR',
+          \ '    ,gv     Log do projeto',
+          \ '    ,gV     Log do arquivo          TESTES',
+          \ '    ,gm     Blame da linha          ,tn     Mais próximo',
+          \ '    ,d      Toggle gutter           ,tf     Arquivo',
+          \ '                                    ,ts     Suíte',
+          \ '    IA',
+          \ '    Ctrl+\  Claude Code (toggle)    SESSÃO',
+          \ '    ,ce     Explicar seleção        ,os     Obsession on/off',
+          \ '    ,cf     Corrigir código         ,u      Undotree',
+          \ '    ,cr     Refatorar               :A      Código <> Teste',
+          \ '    ,pc     Copilot Chat',
+          \ '',
+          \ '    Pressione qualquer tecla para começar...',
+          \ ]
+  endif
+  return lines
+endfunction
+
 function! s:StartScreen() abort
   " Não mostra se: abriu com arquivo, sessão restaurada, buffer já tem conteúdo,
   " ou estamos rodando testes (Vader carregado via --cmd)
@@ -565,34 +678,7 @@ function! s:StartScreen() abort
   setlocal bufhidden=wipe buftype=nofile nobuflisted nocursorline nocursorcolumn
   setlocal noswapfile nomodifiable nonumber norelativenumber signcolumn=no
 
-  let lines = [
-        \ '',
-        \ '    Vim ' . v:version/100 . '.' . v:version%100 . '   —   ,e editar configs.vim',
-        \ '',
-        \ '    BUSCA                          LSP (CoC)',
-        \ '    Ctrl+f  Arquivos (fzf)         K       Documentação',
-        \ '    Ctrl+b  Buffers                gd      Goto definition',
-        \ '    ,gf     Git files              ,rn     Renomear símbolo',
-        \ '    ,rg     Ripgrep (conteúdo)     ,a      Code actions',
-        \ '    ,bl     Linhas do buffer       ,gr     Referências',
-        \ '    ,ht     Histórico              [g ]g   Diagnóstico prev/next',
-        \ '    ,nn     NERDTree               Space+a Todos diagnósticos',
-        \ '                                   Space+o Outline',
-        \ '    GIT                             :Format :OR',
-        \ '    ,gv     Log do projeto',
-        \ '    ,gV     Log do arquivo          TESTES',
-        \ '    ,gm     Blame da linha          ,tn     Mais próximo',
-        \ '    ,d      Toggle gutter           ,tf     Arquivo',
-        \ '                                    ,ts     Suíte',
-        \ '    IA',
-        \ '    Ctrl+\  Claude Code (toggle)    SESSÃO',
-        \ '    ,ce     Explicar seleção        ,os     Obsession on/off',
-        \ '    ,cf     Corrigir código         ,u      Undotree',
-        \ '    ,cr     Refatorar               :A      Código <> Teste',
-        \ '    ,pc     Copilot Chat',
-        \ '',
-        \ '    Pressione qualquer tecla para começar...',
-        \ ]
+  let lines = s:StartScreenLines()
 
   " Centraliza verticalmente
   let padding = (winheight(0) - len(lines)) / 2
@@ -613,6 +699,113 @@ augroup StartScreen
   autocmd!
   autocmd VimEnter * call s:StartScreen()
 augroup end
+
+" =============================================================================
+" vim-which-key — popup de atalhos pendentes ao pressionar <Leader>. Vim
+" apenas: o parser dele lê o texto de `:map` no formato clássico do Vim e
+" não entende o formato novo do Neovim (keymaps Lua com callback + desc em
+" linha separada) — quebra o popup inteiro. No Neovim, which-key.nvim (Lua,
+" user/whichkey.lua) cobre o mesmo papel nativamente.
+" =============================================================================
+if !has('nvim')
+let g:which_key_map = {}
+
+let g:which_key_map.e   = 'edit configs.vim'
+let g:which_key_map.l   = 'next buffer'
+let g:which_key_map.h   = 'previous buffer'
+let g:which_key_map.u   = 'undotree toggle'
+let g:which_key_map.z   = 'goyo (zen mode)'
+let g:which_key_map.d   = 'gitgutter toggle'
+let g:which_key_map.q   = 'scratch buffer (~/buffer)'
+let g:which_key_map.x   = 'scratch markdown (~/buffer.md)'
+let g:which_key_map.cd  = 'cd to file dir'
+let g:which_key_map.pp  = 'toggle paste mode'
+let g:which_key_map.pc  = 'CopilotChat'
+let g:which_key_map.os  = 'Obsession (session record)'
+let g:which_key_map.mg  = 'glow preview (term)'
+let g:which_key_map.rg  = 'Rg search'
+let g:which_key_map.gv  = 'GV log'
+let g:which_key_map.gV  = 'GV! (current file)'
+
+let g:which_key_map.b = {
+      \ 'name' : '+buffer/tab',
+      \ 'd'    : 'close buffer + tab',
+      \ 'a'    : 'close all buffers',
+      \ 'l'    : 'BLines (fzf)',
+      \ }
+
+let g:which_key_map.t = {
+      \ 'name' : '+tab',
+      \ 'n'    : 'new tab',
+      \ 'o'    : 'tab only',
+      \ 'c'    : 'close tab',
+      \ 'm'    : 'move tab',
+      \ 'e'    : 'tabedit here',
+      \ }
+
+let g:which_key_map.s = {
+      \ 'name' : '+spell',
+      \ 's'    : 'toggle spell',
+      \ 'n'    : 'next misspelling',
+      \ 'p'    : 'prev misspelling',
+      \ 'a'    : 'add to dict',
+      \ '?'    : 'suggest',
+      \ }
+
+let g:which_key_map.n = {
+      \ 'name' : '+nerdtree',
+      \ 'n'    : 'toggle',
+      \ 'b'    : 'from bookmark',
+      \ 'f'    : 'find current file',
+      \ }
+
+let g:which_key_map.g = {
+      \ 'name' : '+git/fzf',
+      \ 'f'    : 'GFiles',
+      \ }
+
+let g:which_key_map.c = {
+      \ 'name' : '+copy',
+      \ 's'    : 'copy filename',
+      \ 'l'    : 'copy full path',
+      \ }
+
+let g:which_key_map.db = {
+      \ 'name' : '+dadbod-ui',
+      \ ''     : 'toggle',
+      \ 'a'    : 'add connection',
+      \ 'f'    : 'find buffer',
+      \ 'r'    : 'rename buffer',
+      \ }
+
+let g:which_key_map.md = {
+      \ 'name' : '+markdown preview / mix format diff',
+      \ 'p'    : 'md preview: open',
+      \ 't'    : 'md preview: insert table',
+      \ 'l'    : 'md preview: commands list',
+      \ }
+
+let g:which_key_map.v = {
+      \ 'name' : '+vimux',
+      \ 'p'    : 'prompt command',
+      \ 'l'    : 'run last command',
+      \ 'q'    : 'close runner',
+      \ 'x'    : 'interrupt runner',
+      \ }
+
+let g:which_key_map.i = { 'e' : 'IEx REPL (vimux)' }
+let g:which_key_map.mf = 'mix format'
+
+call which_key#register(',', 'g:which_key_map')
+
+nnoremap <silent> <leader>      :<C-u>WhichKey ','<CR>
+vnoremap <silent> <leader>      :<C-u>WhichKeyVisual ','<CR>
+
+" Nota: <leader>md (mix format diff, configs.vim:120) e <leader>mdp/mdt/mdl
+" (markdown preview, configs.vim:17-19) compartilham o prefixo "md" — mapping
+" real do Vim já resolve isso via timeoutlen (funciona desde antes deste
+" plugin); o which-key só documenta o grupo, não redefine as teclas.
+endif " !has('nvim')
 
 " =============================================================================
 " Customizações LOCAIS (não-versionadas)
