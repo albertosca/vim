@@ -1,7 +1,7 @@
 -- LSP nativo (mason + nvim-lspconfig + blink.cmp), substituindo o CoC só no
 -- lado Neovim. Vim continua com coc.nvim + coc-settings.json sem alteração.
--- Mapeamento coc-extension -> servidor mason: ver tabela em
--- ~/.claude/plans/squishy-crafting-clover.md.
+-- Mapeamento coc-extension -> servidor mason: ver tabela por linguagem
+-- em docs/neovim.md.
 
 require('mason').setup()
 

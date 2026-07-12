@@ -1,4 +1,4 @@
-" Esqueleto Neovim — Fase 1 da migração (ver ~/.claude/plans/squishy-crafting-clover.md)
+" Esqueleto Neovim — Fase 1 da migração (ver docs/neovim.md)
 " Reaproveita 100% da config do Vim; nenhuma duplicação.
 " Demais exclusões (g:pathogen_disabled) e camada Lua entram nas fases seguintes.
 

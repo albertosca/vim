@@ -291,8 +291,12 @@ fi
 if [[ "$FASE" == "all" || "$FASE" == "nvim-lua" ]]; then
   if command -v nvim > /dev/null 2>&1 && ls test/nvim/*_spec.lua > /dev/null 2>&1; then
     _start=$(now_ms)
-    _out=$(nvim --headless -u test/nvim/minimal_init.lua \
-      -c "PlenaryBustedDirectory test/nvim/ {minimal_init = 'test/nvim/minimal_init.lua'}" 2>&1) || true
+    if _out=$(nvim --headless -u test/nvim/minimal_init.lua \
+      -c "PlenaryBustedDirectory test/nvim/ {minimal_init = 'test/nvim/minimal_init.lua'}" 2>&1); then
+      _rc=0
+    else
+      _rc=$?
+    fi
     _elapsed=$(( $(now_ms) - _start ))
 
     [[ "$VERBOSE" -eq 2 ]] && echo "$_out"
@@ -302,6 +306,12 @@ if [[ "$FASE" == "all" || "$FASE" == "nvim-lua" ]]; then
     pl_fail=$(echo "$_clean" | grep -oE 'Failed[[:space:]]*:[[:space:]]*[0-9]+' | grep -oE '[0-9]+' | awk '{sum+=$1} END{print sum+0}')
     pl_err=$(echo "$_clean" | grep -oE 'Errors[[:space:]]*:[[:space:]]*[0-9]+' | grep -oE '[0-9]+' | awk '{sum+=$1} END{print sum+0}')
     pl_fail=$((pl_fail + pl_err))
+
+    # sem linha de resumo = plenary nunca rodou (crash/travou antes) = falha dura, nao 0/0 limpo
+    if ! echo "$_clean" | grep -qE 'Success:|Failed[[:space:]]*:|Errors[[:space:]]*:'; then
+      echo "$_out"
+      pl_fail=1
+    fi
 
     if [[ "$VERBOSE" -eq 1 ]]; then
       printf "\n  %bnvim-lua%b\n" "$BOLD" "$RESET"

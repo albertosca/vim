@@ -31,7 +31,7 @@ Tudo em `nvim/lua/user/*.lua` (dentro do `~/.vim_runtime`, symlinkado em `~/.con
 
 ## Plugin manager: lazy.nvim + Pathogen
 
-Pathogen continua cuidando de tudo que é compartilhado com o Vim (`~/.vim_runtime/plugins/`). `lazy.nvim` cuida só do que é exclusivo do Neovim (`~/.config/nvim/lua/user/plugins.lua`).
+Pathogen continua cuidando de tudo que é compartilhado com o Vim (`~/.vim_runtime/plugins/`). `lazy.nvim` cuida só do que é exclusivo do Neovim (`nvim/lua/user/plugins.lua`).
 
 **Cuidado conhecido:** `lazy.nvim` reseta `&runtimepath` por padrão (otimização de performance) — isso apagaria tudo que o Pathogen carregou. Desligado explicitamente via `performance.rtp.reset = false` no `plugins.lua`.
 

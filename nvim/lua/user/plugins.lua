@@ -1,5 +1,5 @@
 -- Bootstrap lazy.nvim e spec da camada Lua (Fase 2+ da migração,
--- ver ~/.claude/plans/squishy-crafting-clover.md).
+-- ver docs/neovim.md).
 -- Plugins vimscript compartilhados com o Vim continuam via Pathogen (~/.vimrc);
 -- isto aqui é só a parte exclusiva do Neovim.
 
