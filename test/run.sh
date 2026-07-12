@@ -287,6 +287,38 @@ if [[ "$FASE" == "all" || "$FASE" == "nvim-vader" ]]; then
   fi
 fi
 
+# ── Plenary (Neovim Lua specs) ────────────────────────────────────────────────
+if [[ "$FASE" == "all" || "$FASE" == "nvim-lua" ]]; then
+  if command -v nvim > /dev/null 2>&1 && ls test/nvim/*_spec.lua > /dev/null 2>&1; then
+    _start=$(now_ms)
+    _out=$(nvim --headless -u test/nvim/minimal_init.lua \
+      -c "PlenaryBustedDirectory test/nvim/ {minimal_init = 'test/nvim/minimal_init.lua'}" 2>&1) || true
+    _elapsed=$(( $(now_ms) - _start ))
+
+    [[ "$VERBOSE" -eq 2 ]] && echo "$_out"
+
+    _clean=$(echo "$_out" | sed -E 's/\x1b\[[0-9;]*m//g')
+    pl_pass=$(echo "$_clean" | grep -oE 'Success:[[:space:]]*[0-9]+' | grep -oE '[0-9]+' | awk '{sum+=$1} END{print sum+0}')
+    pl_fail=$(echo "$_clean" | grep -oE 'Failed[[:space:]]*:[[:space:]]*[0-9]+' | grep -oE '[0-9]+' | awk '{sum+=$1} END{print sum+0}')
+    pl_err=$(echo "$_clean" | grep -oE 'Errors[[:space:]]*:[[:space:]]*[0-9]+' | grep -oE '[0-9]+' | awk '{sum+=$1} END{print sum+0}')
+    pl_fail=$((pl_fail + pl_err))
+
+    if [[ "$VERBOSE" -eq 1 ]]; then
+      printf "\n  %bnvim-lua%b\n" "$BOLD" "$RESET"
+      echo "$_clean" | grep -E 'Testing:|Success|Fail'
+      echo ""
+    fi
+
+    suite_line "nvim-lua" "${pl_pass:-0}" "${pl_fail:-0}" "0" "$_elapsed"
+
+    if [[ "${pl_fail:-0}" -gt 0 && "$VERBOSE" -eq 0 ]]; then
+      echo "$_clean" | grep -B2 'Fail' | while IFS= read -r line; do
+        printf "    %b↳ %s%b\n" "$RED" "$line" "$RESET"
+      done
+    fi
+  fi
+fi
+
 # ── Jest ──────────────────────────────────────────────────────────────────────
 if [[ "$FASE" == "all" || "$FASE" == "json" ]]; then
   if [[ -f test/node/package.json ]]; then
