@@ -148,14 +148,10 @@ Histórico útil se algo parecido aparecer de novo — todos com causa raiz conf
 
 ## Pendências conhecidas (dependem do usuário, não da config)
 
-- **Ruby (`ruby-lsp`, `rdbg`)**: precisa de Ruby ≥3.1 no PATH. Já tem Ruby 4.0.1 completo via Homebrew (com `rdbg` incluso) em `/usr/local/opt/ruby/bin`, só falta adicionar ao `~/.zshrc`:
-  ```sh
-  export PATH="/usr/local/opt/ruby/bin:$PATH"
-  ```
-  Depois de adicionar: abrir terminal novo, reabrir o Neovim num projeto Ruby real — o mason instala o `ruby-lsp` sozinho na primeira vez.
-- **Go (`nvim-dap-go`)**: precisa do `delve` — `go install github.com/go-delve/delve/cmd/dlv@latest`.
 - **Elixir rename**: `elixir-ls` genuinamente não suporta rename (`renameProvider=false`, confirmado via capabilities) — não é bug daqui. O projeto oficial "Expert" (fusão Next LS + Lexical + ElixirLS) deve resolver isso no futuro, sem ETA ainda.
 - **`:Copilot auth`**: precisa rodar uma vez (login interativo, abre browser) antes do `CopilotChat.nvim` funcionar.
+
+> Ruby (`ruby-lsp`/`rdbg`) e Go (`delve`) já resolvidos — `/usr/local/opt/ruby/bin` e `$HOME/go/bin` estão no `PATH` (`~/.zshrc`), e o `dlv` já foi instalado via `go install`. `ruby-lsp` em si instala sozinho via mason na primeira abertura de um projeto Ruby real.
 
 ---
 
