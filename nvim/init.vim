@@ -61,3 +61,6 @@ lua require('user.glow')
 " Gaps por linguagem: venv Python, typescript-tools (substitui ts_ls)
 lua require('user.venv')
 lua require('user.typescript')
+
+" Autocomplete inline (ghost text) via Gemini/Claude
+lua require('user.minuet')
