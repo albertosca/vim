@@ -65,7 +65,7 @@ Pathogen continua cuidando de tudo que é compartilhado com o Vim (`~/.vim_runti
 
 **Só Neovim, sem equivalente no Vim:**
 
-`nvim-treesitter` (+ `-textobjects`, `-context`), `telescope.nvim`, `nvim-dap` (+ `-ui`, `-go`, `-python`, `-ruby`, `-vscode-js`), `render-markdown.nvim`, `glow.nvim`, `flash.nvim`, `harpoon2`, `trouble.nvim`, `diffview.nvim`, `venv-selector.nvim`.
+`nvim-treesitter` (+ `-textobjects`, `-context`), `telescope.nvim`, `nvim-dap` (+ `-ui`, `-go`, `-python`, `-ruby`, `-vscode-js`), `render-markdown.nvim`, `glow.nvim`, `flash.nvim`, `harpoon2`, `trouble.nvim`, `diffview.nvim`, `venv-selector.nvim`, `minuet-ai.nvim` (autocomplete inline via Gemini/Claude).
 
 **Só Vim, adicionado durante a migração mas útil pros dois (Pathogen, compartilhado):**
 
@@ -166,3 +166,4 @@ Além dos requisitos do [`setup.md`](setup.md), o Neovim precisa de:
 | Go | `gopls`, `sqls`, `nvim-dap-go` (via `go install`) | `brew install go` |
 | Ruby ≥3.1 | `ruby-lsp`, `rdbg` (ver Pendências acima) | `brew install ruby` (keg-only — precisa do PATH manual) |
 | Node.js | `typescript-tools.nvim`, `js-debug-adapter`, `eslint-lsp`, etc. | Já usado pelo CoC no Vim — mesmo Node |
+| `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` (`~/.zsh_secrets`) | `minuet-ai.nvim` (autocomplete inline Gemini/Claude) — precisa de pelo menos uma; as duas habilitam o toggle `,ap` | Gemini: [aistudio.google.com](https://aistudio.google.com/apikey). Claude: [console.anthropic.com](https://console.anthropic.com/) (billing por API, diferente da assinatura do Claude Code) |
