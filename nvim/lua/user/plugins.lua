@@ -91,6 +91,10 @@ require('lazy').setup({
       dependencies = { 'nvim-telescope/telescope.nvim', 'mfussenegger/nvim-dap-python' } },
     { 'pmizio/typescript-tools.nvim',
       dependencies = { 'nvim-lua/plenary.nvim', 'neovim/nvim-lspconfig' } },
+
+    -- Autocomplete inline (ghost text, estilo Copilot) via Gemini/Claude.
+    -- Config real em user/minuet.lua -- aqui e so o spec de instalacao.
+    { 'milanglacier/minuet-ai.nvim' },
   },
   -- lazy.nvim reseta &runtimepath por padrão (otimização de performance) —
   -- isso apaga tudo que o Pathogen já adicionou em ~/.vimrc (coc.nvim,
