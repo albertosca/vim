@@ -14,7 +14,9 @@ end
 require('minuet').setup({
   provider = provider,
   provider_options = {
-    gemini = { model = 'gemini-2.0-flash' },
+    -- gemini-2.0-flash foi desativado pelo Google em 2026-03 -- gemini-3-flash
+    -- e o modelo atual recomendado pro tier gratuito (1500 req/dia).
+    gemini = { model = 'gemini-3-flash' },
     -- Sonnet (nao Haiku, o default do plugin) -- e o Claude "mais esperto"
     -- que o toggle ,ap deveria entregar. Se o nome do modelo mudar no
     -- futuro, checar https://docs.anthropic.com/en/docs/about-claude/models
