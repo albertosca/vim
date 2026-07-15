@@ -26,3 +26,36 @@ Execute (UN-004 ResolveProvider: nenhuma key presente -> erro, sem provider):
   AssertEqual 'error', level
   Assert message =~# 'GEMINI_API_KEY', 'mensagem deveria mencionar GEMINI_API_KEY'
   Assert message =~# 'ANTHROPIC_API_KEY', 'mensagem deveria mencionar ANTHROPIC_API_KEY'
+
+" UN-005 a UN-010: contexto, montagem de request, parsing de resposta.
+" Nenhum destes testes faz chamada de rede real -- so as funcoes puras.
+
+Execute (UN-005 BuildContext: sem truncar quando cabe no teto):
+  let ctx = vim_ai_autocomplete#BuildContext(['abc'], ['def'], 100)
+  AssertEqual 'abc', ctx.before
+  AssertEqual 'def', ctx.after
+
+Execute (UN-006 BuildContext: trunca respeitando 75/25 quando excede o teto):
+  let long_before = repeat('x', 100)
+  let ctx = vim_ai_autocomplete#BuildContext(split(long_before, '\zs'), ['y'], 40)
+  AssertEqual 30, strchars(ctx.before)
+  AssertEqual 1, strchars(ctx.after)
+
+Execute (UN-007 BuildGeminiRequest: produz JSON valido com o prompt):
+  let req = vim_ai_autocomplete#BuildGeminiRequest({'before': 'def foo(', 'after': ')'})
+  let decoded = json_decode(req)
+  Assert decoded.contents[0].parts[0].text =~# 'def foo(', 'request deveria conter o contexto'
+
+Execute (UN-008 BuildClaudeRequest: produz JSON valido com o model certo):
+  let req = vim_ai_autocomplete#BuildClaudeRequest({'before': 'def foo(', 'after': ')'}, 'claude-sonnet-4-5-20250929')
+  let decoded = json_decode(req)
+  AssertEqual 'claude-sonnet-4-5-20250929', decoded.model
+  Assert decoded.messages[0].content =~# 'def foo(', 'request deveria conter o contexto'
+
+Execute (UN-009 ParseGeminiResponse: extrai as linhas do formato real da API):
+  let fake = json_encode({'candidates': [{'content': {'parts': [{'text': "linha1\nlinha2"}]}}]})
+  AssertEqual ['linha1', 'linha2'], vim_ai_autocomplete#ParseGeminiResponse(fake)
+
+Execute (UN-010 ParseClaudeResponse: extrai as linhas do formato real da API):
+  let fake = json_encode({'content': [{'text': "linhaA\nlinhaB\nlinhaC"}]})
+  AssertEqual ['linhaA', 'linhaB', 'linhaC'], vim_ai_autocomplete#ParseClaudeResponse(fake)
