@@ -1,0 +1,44 @@
+" IT-001 a IT-004: wrap do <Tab> contra o mapeamento REAL do CoC ja carregado
+" pelo ~/.vimrc (mesma convencao de test/integration/mappings.vader -- roda
+" sob o sistema inteiro montado, nao um vimrc minimo).
+
+Execute (IT-001 SetupTabWrap preserva o comportamento antigo quando nao ha sugestao):
+  let original_map = maparg('<Tab>', 'i', 0, 1)
+  Assert !empty(original_map), 'esperava um mapeamento de <Tab> ja existente (CoC)'
+  call vim_ai_autocomplete#SetupTabWrap()
+  new
+  call setline(1, 'foo')
+  call cursor(1, 4)
+  let result = vim_ai_autocomplete#TabHandler()
+  let original_result = original_map.expr ? eval(original_map.rhs) : original_map.rhs
+  AssertEqual original_result, result, 'sem sugestao visivel, TabHandler deveria se comportar identico ao mapeamento original'
+After:
+  bdelete!
+
+Execute (IT-002 TabHandler aceita a sugestao quando ela esta visivel):
+  new
+  call setline(1, 'def foo(')
+  call cursor(1, 9)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    pass'])
+  let result = vim_ai_autocomplete#TabHandler()
+  AssertEqual "a, b):\<CR>    pass", result
+  AssertEqual 0, vim_ai_autocomplete#IsVisible(), 'Accept deveria limpar a sugestao'
+After:
+  bdelete!
+
+Execute (IT-003 SetupProviderToggle registra ,ap so com as duas keys):
+  call vim_ai_autocomplete#SetupProviderToggle(1, 1)
+  let map_both = maparg(',ap', 'n', 0, 1)
+  Assert !empty(map_both), ',ap deveria estar registrado com as duas keys presentes'
+
+  nunmap ,ap
+  call vim_ai_autocomplete#SetupProviderToggle(1, 0)
+  let map_one = maparg(',ap', 'n', 0, 1)
+  AssertEqual {}, map_one, ',ap NAO deveria estar registrado com so uma key presente'
+
+Execute (IT-004 ToggleProvider alterna entre gemini e claude):
+  let g:vim_ai_autocomplete_provider = 'gemini'
+  call vim_ai_autocomplete#ToggleProvider()
+  AssertEqual 'claude', g:vim_ai_autocomplete_provider
+  call vim_ai_autocomplete#ToggleProvider()
+  AssertEqual 'gemini', g:vim_ai_autocomplete_provider
