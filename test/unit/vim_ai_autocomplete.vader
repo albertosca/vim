@@ -59,3 +59,63 @@ Execute (UN-009 ParseGeminiResponse: extrai as linhas do formato real da API):
 Execute (UN-010 ParseClaudeResponse: extrai as linhas do formato real da API):
   let fake = json_encode({'content': [{'text': "linhaA\nlinhaB\nlinhaC"}]})
   AssertEqual ['linhaA', 'linhaB', 'linhaC'], vim_ai_autocomplete#ParseClaudeResponse(fake)
+
+" UN-011 a UN-015: ShowSuggestion/ClearSuggestion/IsVisible -- introspeccao
+" via prop_list(), sem depender de tela/renderizacao visual de verdade.
+
+Execute (UN-011 ShowSuggestion desenha 1 prop por linha da sugestao):
+  new
+  call setline(1, 'def foo(')
+  call cursor(1, 9)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    return a + b'])
+  AssertEqual 2, len(prop_list(1))
+  AssertEqual 'def foo(', getline(1)
+  call vim_ai_autocomplete#ClearSuggestion()
+After:
+  bdelete!
+
+Execute (UN-012 ShowSuggestion nao altera o conteudo real do buffer):
+  new
+  call setline(1, 'def foo(')
+  call cursor(1, 9)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):'])
+  AssertEqual 'def foo(', getline(1)
+  call vim_ai_autocomplete#ClearSuggestion()
+After:
+  bdelete!
+
+Execute (UN-013 IsVisible reflete o estado real):
+  new
+  call setline(1, 'x')
+  call cursor(1, 2)
+  AssertEqual 0, vim_ai_autocomplete#IsVisible()
+  call vim_ai_autocomplete#ShowSuggestion(['y'])
+  AssertEqual 1, vim_ai_autocomplete#IsVisible()
+  call vim_ai_autocomplete#ClearSuggestion()
+  AssertEqual 0, vim_ai_autocomplete#IsVisible()
+After:
+  bdelete!
+
+Execute (UN-014 ClearSuggestion remove TODAS as props da linha, nao so uma):
+  new
+  call setline(1, 'x')
+  call cursor(1, 2)
+  call vim_ai_autocomplete#ShowSuggestion(['linha1', 'linha2', 'linha3'])
+  AssertEqual 3, len(prop_list(1)), 'deveria ter 3 props (1 por linha da sugestao)'
+  call vim_ai_autocomplete#ClearSuggestion()
+  AssertEqual 0, len(prop_list(1)), 'ClearSuggestion deveria remover TODAS, nao so a primeira'
+After:
+  bdelete!
+
+Execute (UN-015 ClearSuggestion usa a linha salva, nao a posicao atual do cursor):
+  new
+  call setline(1, ['linha um', 'linha dois'])
+  call cursor(1, 1)
+  call vim_ai_autocomplete#ShowSuggestion(['sugestao'])
+  AssertEqual 1, len(prop_list(1))
+  " simula o cursor tendo se movido (CursorMovedI dispara DEPOIS do movimento)
+  call cursor(2, 1)
+  call vim_ai_autocomplete#ClearSuggestion()
+  AssertEqual 0, len(prop_list(1)), 'deveria limpar a linha 1 (onde a sugestao estava), nao a linha 2 (onde o cursor esta agora)'
+After:
+  bdelete!
