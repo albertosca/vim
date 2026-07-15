@@ -1,0 +1,28 @@
+" UN-001 a UN-004: vim_ai_autocomplete#ResolveProvider() -- logica pura,
+" mesma decisao (Gemini padrao, Claude via toggle) ja usada no lado Neovim
+" (nvim/lua/user/minuet_provider.lua).
+
+Execute (UN-001 ResolveProvider: as duas keys presentes -> gemini, sem aviso):
+  let [provider, level, message] = vim_ai_autocomplete#ResolveProvider(1, 1)
+  AssertEqual 'gemini', provider
+  AssertEqual v:null, level
+  AssertEqual v:null, message
+
+Execute (UN-002 ResolveProvider: so gemini presente -> gemini, com aviso):
+  let [provider, level, message] = vim_ai_autocomplete#ResolveProvider(1, 0)
+  AssertEqual 'gemini', provider
+  AssertEqual 'warn', level
+  Assert message =~# 'gemini', 'mensagem deveria mencionar gemini'
+
+Execute (UN-003 ResolveProvider: so claude presente -> claude, com aviso):
+  let [provider, level, message] = vim_ai_autocomplete#ResolveProvider(0, 1)
+  AssertEqual 'claude', provider
+  AssertEqual 'warn', level
+  Assert message =~# 'claude', 'mensagem deveria mencionar claude'
+
+Execute (UN-004 ResolveProvider: nenhuma key presente -> erro, sem provider):
+  let [provider, level, message] = vim_ai_autocomplete#ResolveProvider(0, 0)
+  AssertEqual v:null, provider
+  AssertEqual 'error', level
+  Assert message =~# 'GEMINI_API_KEY', 'mensagem deveria mencionar GEMINI_API_KEY'
+  Assert message =~# 'ANTHROPIC_API_KEY', 'mensagem deveria mencionar ANTHROPIC_API_KEY'
