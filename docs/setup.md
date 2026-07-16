@@ -12,6 +12,7 @@ Guia completo para instalar e configurar o `~/.vim_runtime` em uma máquina nova
 | Node.js | sim | `brew install node` | `apt install nodejs npm` | CoC (LSP) não carrega sem ele |
 | git | sim | `brew install git` | `apt install git` | submodules, fugitive, gv |
 | ripgrep (`rg`) | sim | `brew install ripgrep` | `apt install ripgrep` | busca fzf/Ack |
+| curl | sim | já vem por padrão | `apt install curl` | vim-ai-autocomplete chama as APIs Gemini/Claude via `curl` |
 | psql / mysql | opcional | `brew install postgresql` / `brew install mysql` | `apt install postgresql-client` / `apt install mysql-client` | vim-dadbod (DB UI) |
 
 ---

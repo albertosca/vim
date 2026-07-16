@@ -99,12 +99,12 @@ exemplos e o criterio **fica local vs. abre PR**:
 - **Fica local** (so seu): mappings, colorscheme, opcoes de gosto, paths da maquina.
 - **Abre um PR** (melhora pra todos): trocar/adicionar um plugin, corrigir bug ou default ruim.
 
-## Plugins (51)
+## Plugins (52)
 
 | Categoria | Plugins |
 |---|---|
 | **LSP / Completion** | coc.nvim (25 extensoes), vim-snippets |
-| **IA** | copilot-chat.vim, vim-claude-code |
+| **IA** | copilot-chat.vim, vim-claude-code, vim-ai-autocomplete |
 | **Busca** | fzf, fzf.vim |
 | **Navegacao** | NERDTree, vim-rooter, vim-projectionist, vim-rails, vim-tmux-navigator |
 | **Git** | vim-fugitive, vim-gitgutter, gv.vim |
@@ -159,7 +159,7 @@ Destaques:
 
 ## Testes
 
-365 testes automatizados em 7 suites:
+389 testes automatizados em 7 suites:
 
 ```bash
 bash test/run.sh          # compacto — uma linha por suite
@@ -171,15 +171,16 @@ bash test/run.sh unit     # rodar uma suite especifica
 ```
   Vim Config Test Suite
   ─────────────────────────────────────────────────────
-  ✓  shell            66 passed  1 warn  0 failed
-  ✓  unit             97 passed  0 failed
-  ✓  integration      134 passed  0 failed
+  ✓  shell            65 passed  2 warn  0 failed
+  ✓  unit             112 passed  0 failed
+  ✓  integration      138 passed  0 failed
   ✓  e2e              19 passed  0 failed
-  ✓  jest             28 passed  0 failed
   ✓  nvim-vader        4 passed  0 failed
-  ✓  nvim-lua         17 passed  0 failed
+  ✓  nvim-lua         23 passed  0 failed
+  ✓  jest             28 passed  0 failed
   ─────────────────────────────────────────────────────
-  ✓ 365 passed   all green
+  ✓ 389 passed   all green
+    2 warn
 ```
 
 Detalhes da arquitetura de testes em **[docs/test_plan.md](docs/test_plan.md)**.
