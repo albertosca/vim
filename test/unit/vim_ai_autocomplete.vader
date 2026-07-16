@@ -155,3 +155,20 @@ Execute (UN-020 BuildClaudeCommand: has_ant_authenticated=1 ignora a api_key rec
   let ctx = {'before': 'z', 'after': ''}
   let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 1, 'chave-que-nao-deveria-aparecer')
   Assert index(result.cmd, 'chave-que-nao-deveria-aparecer') < 0, 'caminho via ant nao deveria referenciar a api_key estatica no comando'
+
+" UN-021 a UN-022: vim_ai_autocomplete#RunWithoutAnthropicKey() -- garante que
+" a env var some durante a chamada e volta ao estado exato de antes depois
+" (setada com o valor original, OU continua ausente se nunca existiu).
+
+Execute (UN-021 RunWithoutAnthropicKey remove a key durante a chamada e restaura o valor original depois):
+  let $ANTHROPIC_API_KEY = 'valor-original'
+  let seen_during = vim_ai_autocomplete#RunWithoutAnthropicKey({-> $ANTHROPIC_API_KEY})
+  AssertEqual '', seen_during, 'durante a chamada, a key nao deveria estar visivel'
+  AssertEqual 'valor-original', $ANTHROPIC_API_KEY, 'depois, a key deveria voltar ao valor original'
+
+Execute (UN-022 RunWithoutAnthropicKey nao deixa a key setada se ela nunca existiu):
+  if exists('$ANTHROPIC_API_KEY')
+    unlet $ANTHROPIC_API_KEY
+  endif
+  call vim_ai_autocomplete#RunWithoutAnthropicKey({-> 0})
+  AssertEqual 0, exists('$ANTHROPIC_API_KEY'), 'se a key nunca existiu, nao deveria existir depois tambem'
