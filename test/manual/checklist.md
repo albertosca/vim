@@ -95,6 +95,32 @@ na seção "Histórico de execuções" ao final.
 - [ ] **E2E-058** — `,u` abre painel de histórico visual de undo
 - [ ] **E2E-059** — Histórico de undo persiste após fechar e reabrir o arquivo
 
+## vim-ai-autocomplete — ghost-text Gemini/Claude (Vim clássico)
+
+**Pré-requisito:** `GEMINI_API_KEY` em `~/.zsh_secrets` (já configurado). `ANTHROPIC_API_KEY` opcional — sem ela, `,ap` não deveria nem aparecer (comportamento esperado, não é bug).
+
+- [ ] **E2E-060** — Abrir um arquivo de código real (`.py`/`.ex`/`.js`), digitar uma linha incompleta (ex: `def soma(a, b):`), parar de digitar por ~1s → sugestão cinza aparece (ghost text, não um menu)
+- [ ] **E2E-061** — `Tab` com a sugestão visível → aceita o texto de verdade (deixa de ser cinza), cursor avança pro fim do texto inserido
+- [ ] **E2E-062** — Sugestão multi-linha (peça algo que gere 2-3 linhas, ex: início de uma função) → `Tab` insere TODAS as linhas corretamente, com quebra de linha real (não tudo numa linha só)
+- [ ] **E2E-063** — Com a sugestão visível, apertar `Esc` → sugestão some sem deixar nenhum caractere/lixo no buffer; `:w` + reabrir o arquivo confirma que nada vazou pro arquivo salvo
+- [ ] **E2E-064** — **Sem nenhuma sugestão visível**, `Tab` continua funcionando exatamente como antes (CoC): se o menu de completion do CoC estiver aberto, `Tab` navega pro próximo item; em posição normal, insere tab/aciona completion como sempre
+- [ ] **E2E-065** — Digitar rápido sem pausar → NÃO deveria disparar sugestão a cada tecla (debounce funcionando, sem lag perceptível na digitação)
+- [ ] **E2E-066** — Se `ANTHROPIC_API_KEY` estiver configurada: `,ap` alterna entre Gemini e Claude (mensagem confirma a troca); pedir uma sugestão depois do toggle deveria vir do provider ativo (diferença de "personalidade" da sugestão é um bom sinal, não uma prova rígida)
+- [ ] **E2E-067** — Sem `ANTHROPIC_API_KEY`: `,ap` não faz nada / não está mapeado (esperado — confirma que o toggle é condicional)
+- [ ] **E2E-068** — Editar dois arquivos diferentes intercalado (trocar de buffer no meio de esperar uma sugestão) → nenhuma sugestão "vaza" pro buffer errado
+
+## minuet-ai.nvim — ghost-text Gemini/Claude (Neovim)
+
+**Pré-requisito:** mesmas API keys do item acima (`~/.zsh_secrets`, compartilhadas entre os dois editores).
+
+- [ ] **E2E-069** — Mesmo teste do E2E-060, agora no `nvim` — sugestão ghost-text aparece depois da pausa
+- [ ] **E2E-070** — `Ctrl+y` aceita a sugestão (multi-linha incluso)
+- [ ] **E2E-071** — `Ctrl+e` dispensa a sugestão sem deixar lixo
+- [ ] **E2E-072** — `,at` liga/desliga o auto-trigger — com ele desligado, sugestão só aparece se invocada manualmente (ver docs do minuet pro comando manual, se quiser testar esse caminho)
+- [ ] **E2E-073** — Se `ANTHROPIC_API_KEY` estiver configurada: `,ap` alterna Gemini/Claude (mensagem `Minuet Provider changed to: ...` confirma)
+- [ ] **E2E-074** — Sem `ANTHROPIC_API_KEY`: `,ap` não está mapeado (mesmo comportamento condicional do lado Vim)
+- [ ] **E2E-075** — Digitar em um buffer, trocar de janela/buffer no meio da espera → sem sugestão vazando pro lugar errado (mesmo espírito do E2E-068)
+
 ---
 
 ## Histórico de execuções
