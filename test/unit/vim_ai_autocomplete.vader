@@ -172,3 +172,17 @@ Execute (UN-022 RunWithoutAnthropicKey nao deixa a key setada se ela nunca exist
   endif
   call vim_ai_autocomplete#RunWithoutAnthropicKey({-> 0})
   AssertEqual 0, exists('$ANTHROPIC_API_KEY'), 'se a key nunca existiu, nao deveria existir depois tambem'
+
+Execute (UN-023 RunWithoutAnthropicKey restaura a key mesmo se Fn lancar excecao, e a excecao propaga):
+  let $ANTHROPIC_API_KEY = 'valor-original'
+  function! s:ThrowError() abort
+    throw 'erro-de-teste'
+  endfunction
+  let threw = 0
+  try
+    call vim_ai_autocomplete#RunWithoutAnthropicKey(function('s:ThrowError'))
+  catch /erro-de-teste/
+    let threw = 1
+  endtry
+  AssertEqual 1, threw, 'a excecao deveria propagar pro chamador, nao ser engolida'
+  AssertEqual 'valor-original', $ANTHROPIC_API_KEY, 'a key deveria ser restaurada mesmo com excecao'
