@@ -119,3 +119,39 @@ Execute (UN-015 ClearSuggestion usa a linha salva, nao a posicao atual do cursor
   AssertEqual 0, len(prop_list(1)), 'deveria limpar a linha 1 (onde a sugestao estava), nao a linha 2 (onde o cursor esta agora)'
 After:
   bdelete!
+
+" UN-016 a UN-020: vim_ai_autocomplete#BuildClaudeCommand() -- decide entre
+" rotear via `ant` (assinatura, OAuth) ou via curl cru (ANTHROPIC_API_KEY
+" estatica). Puramente testavel: nao precisa do `ant` instalado nem de
+" chamada de rede -- so passa has_ant_authenticated como bool direto.
+
+Execute (UN-016 BuildClaudeCommand via ant: monta comando ant, corpo vai por stdin):
+  let ctx = {'before': 'def foo(', 'after': ')'}
+  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 1, '')
+  AssertEqual ['ant', 'messages', 'create', '--model', 'claude-sonnet-4-5-20250929', '--max-tokens', '256', '--format', 'json'], result.cmd
+  Assert !empty(result.stdin), 'stdin deveria conter o corpo JSON quando o caminho e via ant'
+
+Execute (UN-017 BuildClaudeCommand via ant: stdin e JSON valido com o contexto certo):
+  let ctx = {'before': 'def foo(', 'after': ')'}
+  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 1, '')
+  let decoded = json_decode(result.stdin)
+  AssertEqual 'claude-sonnet-4-5-20250929', decoded.model
+  Assert decoded.messages[0].content =~# 'def foo(', 'corpo deveria conter o contexto'
+
+Execute (UN-018 BuildClaudeCommand via curl: monta comando curl com a key, sem stdin):
+  let ctx = {'before': 'def foo(', 'after': ')'}
+  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 0, 'sk-ant-fake123')
+  AssertEqual 'curl', result.cmd[0]
+  AssertEqual 'x-api-key: sk-ant-fake123', result.cmd[6]
+  AssertEqual '', result.stdin
+
+Execute (UN-019 BuildClaudeCommand via curl: endpoint e headers corretos):
+  let ctx = {'before': 'x', 'after': 'y'}
+  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 0, 'chave')
+  AssertEqual 'https://api.anthropic.com/v1/messages', result.cmd[4]
+  Assert index(result.cmd, 'anthropic-version: 2023-06-01') >= 0
+
+Execute (UN-020 BuildClaudeCommand: has_ant_authenticated=1 ignora a api_key recebida):
+  let ctx = {'before': 'z', 'after': ''}
+  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 1, 'chave-que-nao-deveria-aparecer')
+  Assert index(result.cmd, 'chave-que-nao-deveria-aparecer') < 0, 'caminho via ant nao deveria referenciar a api_key estatica no comando'
