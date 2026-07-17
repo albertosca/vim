@@ -42,3 +42,25 @@ Execute (IT-004 ToggleProvider alterna entre gemini e claude):
   AssertEqual 'claude', g:vim_ai_autocomplete_provider
   call vim_ai_autocomplete#ToggleProvider()
   AssertEqual 'gemini', g:vim_ai_autocomplete_provider
+
+Execute (IT-005 SetupEscWrap preserva o comportamento antigo do <Esc> quando nao ha sugestao):
+  let original_map = maparg('<Esc>', 'i', 0, 1)
+  call vim_ai_autocomplete#SetupEscWrap()
+  new
+  call setline(1, 'foo')
+  let result = vim_ai_autocomplete#EscHandler()
+  let original_result = empty(original_map) ? "\<Esc>" : (original_map.expr ? eval(original_map.rhs) : original_map.rhs)
+  AssertEqual original_result, result, 'sem sugestao visivel, EscHandler deveria se comportar identico ao mapeamento original de <Esc>'
+After:
+  bdelete!
+
+Execute (IT-006 EscHandler dispensa a sugestao sem sair do insert mode quando ela esta visivel):
+  new
+  call setline(1, 'def foo(')
+  call cursor(1, 9)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    pass'])
+  let result = vim_ai_autocomplete#EscHandler()
+  AssertEqual '', result, 'com sugestao visivel, EscHandler deveria retornar string vazia (nao sai do insert mode)'
+  AssertEqual 0, vim_ai_autocomplete#IsVisible(), 'EscHandler deveria limpar a sugestao'
+After:
+  bdelete!
