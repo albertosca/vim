@@ -15,6 +15,8 @@ Guia completo para instalar e configurar o `~/.vim_runtime` em uma máquina nova
 | curl | sim | já vem por padrão | `apt install curl` | vim-ai-autocomplete chama as APIs Gemini/Claude via `curl` |
 | psql / mysql | opcional | `brew install postgresql` / `brew install mysql` | `apt install postgresql-client` / `apt install mysql-client` | vim-dadbod (DB UI) |
 
+**Opcional — usar a assinatura Claude em vez de API key paga:** instale o `ant` CLI (`brew install anthropics/tap/ant`) e rode `ant auth login` uma vez (abre o browser, faz OAuth). O `vim-ai-autocomplete` detecta isso sozinho no `VimEnter` e prefere rotear o toggle `,ap` pela assinatura em vez da `ANTHROPIC_API_KEY` estática, se ambas existirem.
+
 ---
 
 ## Instalação
