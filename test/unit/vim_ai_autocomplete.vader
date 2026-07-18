@@ -186,3 +186,39 @@ Execute (UN-023 RunWithoutAnthropicKey restaura a key mesmo se Fn lancar excecao
   endtry
   AssertEqual 1, threw, 'a excecao deveria propagar pro chamador, nao ser engolida'
   AssertEqual 'valor-original', $ANTHROPIC_API_KEY, 'a key deveria ser restaurada mesmo com excecao'
+
+" UN-024 a UN-028: vim_ai_autocomplete#AdjustSuggestionLines() -- corrige o
+" caso (confirmado real, reproduzivel 3/3 com gemini-3.1-flash-lite) onde a
+" primeira linha da sugestao vem sem quebra de linha nem indentacao quando
+" o contexto termina em ":" (abertura de bloco Python).
+
+Execute (UN-024 AdjustSuggestionLines insere quebra de linha e indentacao quando contexto termina em dois-pontos, python, expandtab):
+  let lines = ['if n <= 1:', '        return n', '    else:', '        return fibonacci(n - 1) + fibonacci(n - 2)']
+  let result = vim_ai_autocomplete#AdjustSuggestionLines(lines, 'def fibonacci(n):', 'python', 4, 1)
+  AssertEqual [
+        \ '',
+        \ '    if n <= 1:',
+        \ '        return n',
+        \ '    else:',
+        \ '        return fibonacci(n - 1) + fibonacci(n - 2)',
+        \ ], result
+
+Execute (UN-025 AdjustSuggestionLines nao mexe quando contexto NAO termina em dois-pontos (continuacao normal na mesma linha)):
+  let lines = ['a + b']
+  let result = vim_ai_autocomplete#AdjustSuggestionLines(lines, '    return', 'python', 4, 1)
+  AssertEqual ['a + b'], result
+
+Execute (UN-026 AdjustSuggestionLines nao mexe quando filetype nao e python):
+  let lines = ['if (n <= 1) {', '  return n;', '}']
+  let result = vim_ai_autocomplete#AdjustSuggestionLines(lines, 'function fib(n) {', 'javascript', 2, 1)
+  AssertEqual ['if (n <= 1) {', '  return n;', '}'], result
+
+Execute (UN-027 AdjustSuggestionLines nao mexe quando a sugestao ja veio com quebra de linha propria):
+  let lines = ['', '    if n <= 1:', '        return n']
+  let result = vim_ai_autocomplete#AdjustSuggestionLines(lines, 'def fibonacci(n):', 'python', 4, 1)
+  AssertEqual ['', '    if n <= 1:', '        return n'], result
+
+Execute (UN-028 AdjustSuggestionLines usa tab quando noexpandtab):
+  let lines = ['if n <= 1:', '        return n']
+  let result = vim_ai_autocomplete#AdjustSuggestionLines(lines, 'def fibonacci(n):', 'python', 4, 0)
+  AssertEqual ['', "\tif n <= 1:", '        return n'], result
