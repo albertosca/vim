@@ -15,14 +15,66 @@ Execute (IT-001 SetupTabWrap preserva o comportamento antigo quando nao ha suges
 After:
   bdelete!
 
-Execute (IT-002 TabHandler aceita a sugestao quando ela esta visivel):
+Execute (IT-002 TabHandler aceita a sugestao quando ela esta visivel, agendando insercao direto no buffer):
+  call vim_ai_autocomplete#SetupTabWrap()
   new
   call setline(1, 'def foo(')
-  call cursor(1, 9)
+  normal! G$
   call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    pass'])
-  let result = vim_ai_autocomplete#TabHandler()
-  AssertEqual "a, b):\<CR>    pass", result
-  AssertEqual 0, vim_ai_autocomplete#IsVisible(), 'Accept deveria limpar a sugestao'
+  call feedkeys("a\<Tab>\<Esc>", 'x')
+  AssertEqual 0, vim_ai_autocomplete#IsVisible(), 'Accept deveria limpar a sugestao imediatamente'
+  sleep 10m
+  AssertEqual ['def foo(a, b):', '    pass'], getline(1, 2)
+After:
+  bdelete!
+
+Execute (IT-002b Accept preserva a indentacao exata da sugestao, sem o autoindent do Vim dobrando):
+  call vim_ai_autocomplete#SetupTabWrap()
+  new
+  setlocal filetype=python
+  setlocal autoindent smartindent
+  call setline(1, 'def fibonacci(n):')
+  normal! G$
+  call vim_ai_autocomplete#ShowSuggestion(['if n <= 1:', '        return n', '    else:', '        return fibonacci(n - 1) + fibonacci(n - 2)'])
+  call feedkeys("a\<Tab>\<Esc>", 'x')
+  sleep 10m
+  AssertEqual [
+        \ 'def fibonacci(n):if n <= 1:',
+        \ '        return n',
+        \ '    else:',
+        \ '        return fibonacci(n - 1) + fibonacci(n - 2)',
+        \ ], getline(1, 4), 'a indentacao de cada linha deveria bater exatamente com o texto da sugestao, sem o Vim somar indentacao em cima'
+After:
+  bdelete!
+
+Execute (IT-002c Accept preserva o texto depois do cursor, movendo-o pro fim da ultima linha inserida):
+  new
+  call setline(1, 'foobar')
+  call cursor(1, 4)
+  call vim_ai_autocomplete#ShowSuggestion(['XXX', 'YYY'])
+  call vim_ai_autocomplete#TabHandler()
+  sleep 10m
+  AssertEqual ['fooXXX', 'YYYbar'], getline(1, 2)
+  AssertEqual [2, 4], [line('.'), col('.')], 'cursor deveria terminar logo depois do texto inserido na ultima linha (antes do "bar" preservado)'
+After:
+  bdelete!
+
+Execute (IT-002d Accept via mapeamento real de <Tab> nao dispara E565 (mudar buffer durante avaliacao de <expr>)):
+  call vim_ai_autocomplete#SetupTabWrap()
+  new
+  setlocal filetype=python
+  call setline(1, 'def fibonacci(n):')
+  normal! G$
+  call vim_ai_autocomplete#ShowSuggestion(['if n <= 1:', '        return n'])
+  let threw = 0
+  try
+    call feedkeys("a\<Tab>\<Esc>", 'x')
+  catch /E565/
+    let threw = 1
+  endtry
+  AssertEqual 0, threw, 'aceitar via <Tab> de verdade (nao via :call direto) nao deveria disparar E565'
+  sleep 10m
+  AssertEqual ['def fibonacci(n):if n <= 1:', '        return n'], getline(1, 2)
 After:
   bdelete!
 
