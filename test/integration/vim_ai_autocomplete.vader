@@ -78,15 +78,15 @@ Execute (IT-002d Accept via mapeamento real de <Tab> nao dispara E565 (mudar buf
 After:
   bdelete!
 
-Execute (IT-003 SetupProviderToggle registra ,ap so com as duas keys):
+Execute (IT-003 SetupProviderToggle registra ,pv so com as duas keys):
   call vim_ai_autocomplete#SetupProviderToggle(1, 1)
-  let map_both = maparg(',ap', 'n', 0, 1)
-  Assert !empty(map_both), ',ap deveria estar registrado com as duas keys presentes'
+  let map_both = maparg(',pv', 'n', 0, 1)
+  Assert !empty(map_both), ',pv deveria estar registrado com as duas keys presentes'
 
-  nunmap ,ap
+  nunmap ,pv
   call vim_ai_autocomplete#SetupProviderToggle(1, 0)
-  let map_one = maparg(',ap', 'n', 0, 1)
-  AssertEqual {}, map_one, ',ap NAO deveria estar registrado com so uma key presente'
+  let map_one = maparg(',pv', 'n', 0, 1)
+  AssertEqual {}, map_one, ',pv NAO deveria estar registrado com so uma key presente'
 
 Execute (IT-004 ToggleProvider alterna entre gemini e claude):
   let g:vim_ai_autocomplete_provider = 'gemini'

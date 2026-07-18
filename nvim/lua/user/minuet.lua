@@ -14,11 +14,13 @@ end
 require('minuet').setup({
   provider = provider,
   provider_options = {
-    -- gemini-2.0-flash foi desativado pelo Google em 2026-03 -- gemini-3-flash
-    -- e o modelo atual recomendado pro tier gratuito (1500 req/dia).
-    gemini = { model = 'gemini-3-flash' },
+    -- gemini-2.0-flash foi desativado pelo Google em 2026-03; gemini-3-flash
+    -- (a proxima escolha) NUNCA existiu como modelo estavel (confirmado via
+    -- ListModels real do lado Vim, 2026-07-18) -- gemini-3.1-flash-lite e o
+    -- tier economico atual que de fato funciona (validado com chamada real).
+    gemini = { model = 'gemini-3.1-flash-lite' },
     -- Sonnet (nao Haiku, o default do plugin) -- e o Claude "mais esperto"
-    -- que o toggle ,ap deveria entregar. Se o nome do modelo mudar no
+    -- que o toggle ,pv deveria entregar. Se o nome do modelo mudar no
     -- futuro, checar https://docs.anthropic.com/en/docs/about-claude/models
     claude = { model = 'claude-sonnet-4-5-20250929' },
   },
@@ -33,11 +35,16 @@ require('minuet').setup({
   debounce = 600,
 })
 
-vim.keymap.set('n', '<leader>at', require('minuet.virtualtext').action.toggle_auto_trigger,
+-- <leader>pt/<leader>pv, nao <leader>at/<leader>ap: <leader>a ja e mapeado
+-- (code actions do CoC) -- as chaves antigas compartilhavam prefixo com um
+-- mapeamento completo existente, causando disparo do comando errado se o
+-- usuario nao digitasse rapido o suficiente (achado real, reportado pelo
+-- Alberto -- mesmo problema no lado Vim, plugins/vim-ai-autocomplete).
+vim.keymap.set('n', '<leader>pt', require('minuet.virtualtext').action.toggle_auto_trigger,
   { desc = 'minuet: toggle auto-trigger' })
 
 if has_gemini and has_claude then
-  vim.keymap.set('n', '<leader>ap', function()
+  vim.keymap.set('n', '<leader>pv', function()
     local current = require('minuet').config.provider
     local next_provider = current == 'gemini' and 'claude' or 'gemini'
     require('minuet').change_provider(next_provider)

@@ -32,17 +32,17 @@ describe("user.minuet_provider.resolve (logica pura, sem tocar env/vim.notify)",
 end)
 
 describe("user.minuet setup real (usa o ambiente de verdade desta maquina)", function()
-  it("registra ,at sempre", function()
+  it("registra ,pt sempre", function()
     require('user.minuet')
-    local map = vim.fn.maparg(',at', 'n', false, true)
+    local map = vim.fn.maparg(',pt', 'n', false, true)
     assert.is_not_nil(map.callback)
   end)
 
-  it("so registra ,ap se as duas API keys existirem no ambiente real", function()
+  it("so registra ,pv se as duas API keys existirem no ambiente real", function()
     require('user.minuet')
     local has_gemini = os.getenv('GEMINI_API_KEY') ~= nil and os.getenv('GEMINI_API_KEY') ~= ''
     local has_claude = os.getenv('ANTHROPIC_API_KEY') ~= nil and os.getenv('ANTHROPIC_API_KEY') ~= ''
-    local map = vim.fn.maparg(',ap', 'n', false, true)
+    local map = vim.fn.maparg(',pv', 'n', false, true)
     if has_gemini and has_claude then
       assert.is_not_nil(map.callback)
     else
