@@ -585,6 +585,21 @@ let g:claude_code_split_ratio = 0.4
 nnoremap <silent> <c-\> <Nop>
 
 " =============================================================================
+" GitHub Copilot (github/copilot.vim, pacote nativo em
+" ~/.vim/pack/github/start/, fora deste repo) desativado por padrao
+" (pedido do Alberto, 2026-07-18) -- o client estava lancando erro em toda
+" abertura do Vim (E723/E10 dentro de copilot#client#Start via
+" RunDeferred, achado real durante teste manual de ,pt). g:loaded_copilot
+" precisa ser setado ANTES do plugin carregar (guarda propria dele em
+" plugin/copilot.vim) -- funciona aqui porque configs.vim e sourced dentro
+" de ~/.vimrc, antes da fase de carregamento de plugin/*.vim do Vim.
+" copilot-chat.vim (plugin separado, secao abaixo) NAO depende do client
+" deste plugin -- confirmado via grep, sem chamadas a copilot#* -- entao
+" continua funcionando normalmente com essa linha ativa. Pra reativar o
+" github/copilot.vim: comentar a linha abaixo e reiniciar o Vim.
+let g:loaded_copilot = 1
+
+" =============================================================================
 " copilot-chat.vim — Chat com Copilot dentro do Vim. Vim apenas — no Neovim
 " (Vim9script incompatível, ver Fase 1) os mesmos atalhos são remapeados
 " pro CopilotChat.nvim em user/copilot.lua.
