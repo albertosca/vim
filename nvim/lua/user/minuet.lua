@@ -20,7 +20,7 @@ require('minuet').setup({
     -- tier economico atual que de fato funciona (validado com chamada real).
     gemini = { model = 'gemini-3.1-flash-lite' },
     -- Sonnet (nao Haiku, o default do plugin) -- e o Claude "mais esperto"
-    -- que o toggle ,pv deveria entregar. Se o nome do modelo mudar no
+    -- que o toggle ,pr deveria entregar. Se o nome do modelo mudar no
     -- futuro, checar https://docs.anthropic.com/en/docs/about-claude/models
     claude = { model = 'claude-sonnet-4-5-20250929' },
   },
@@ -35,18 +35,31 @@ require('minuet').setup({
   debounce = 600,
 })
 
--- <leader>pt/<leader>pv, nao <leader>at/<leader>ap: <leader>a ja e mapeado
+-- <leader>pt/<leader>pr, nao <leader>at/<leader>ap: <leader>a ja e mapeado
 -- (code actions do CoC) -- as chaves antigas compartilhavam prefixo com um
 -- mapeamento completo existente, causando disparo do comando errado se o
 -- usuario nao digitasse rapido o suficiente (achado real, reportado pelo
 -- Alberto -- mesmo problema no lado Vim, plugins/vim-ai-autocomplete).
+-- <leader>pv (tentativa anterior) tambem foi descartado: colide de verdade
+-- com <leader>pv do seletor de venv Python (nvim/lua/user/venv.lua), que
+-- carrega ANTES na ordem do init.vim -- nosso keymap sobrescrevia o dele
+-- silenciosamente (achado real, reportado pelo Alberto: "PV e PT deu pau").
 vim.keymap.set('n', '<leader>pt', require('minuet.virtualtext').action.toggle_auto_trigger,
   { desc = 'minuet: toggle auto-trigger' })
 
+-- which-key.nvim (nvim/lua/user/whichkey.lua) so conhece leafs registrados
+-- explicitamente via add() -- sem isso, o prefixo <leader>p (ja usado por
+-- ,pv/,pp em whichkey.lua) fica com uma arvore incompleta e which-key
+-- rejeita ,pt/,pr com "is undefined" mesmo a keymap real existindo
+-- (achado real, reportado pelo Alberto). Registrado aqui, nao em
+-- whichkey.lua, pra ficar colado na mesma condicao has_gemini/has_claude.
+require('which-key').add({ '<leader>pt', desc = 'minuet: toggle auto-trigger' })
+
 if has_gemini and has_claude then
-  vim.keymap.set('n', '<leader>pv', function()
+  vim.keymap.set('n', '<leader>pr', function()
     local current = require('minuet').config.provider
     local next_provider = current == 'gemini' and 'claude' or 'gemini'
     require('minuet').change_provider(next_provider)
   end, { desc = 'minuet: toggle provider gemini/claude' })
+  require('which-key').add({ '<leader>pr', desc = 'minuet: toggle provider gemini/claude' })
 end

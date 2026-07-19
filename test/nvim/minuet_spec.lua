@@ -38,15 +38,22 @@ describe("user.minuet setup real (usa o ambiente de verdade desta maquina)", fun
     assert.is_not_nil(map.callback)
   end)
 
-  it("so registra ,pv se as duas API keys existirem no ambiente real", function()
+  it("so registra ,pr se as duas API keys existirem no ambiente real", function()
     require('user.minuet')
     local has_gemini = os.getenv('GEMINI_API_KEY') ~= nil and os.getenv('GEMINI_API_KEY') ~= ''
     local has_claude = os.getenv('ANTHROPIC_API_KEY') ~= nil and os.getenv('ANTHROPIC_API_KEY') ~= ''
-    local map = vim.fn.maparg(',pv', 'n', false, true)
+    local map = vim.fn.maparg(',pr', 'n', false, true)
     if has_gemini and has_claude then
       assert.is_not_nil(map.callback)
     else
       assert.are.equal('', map.lhs or '')
     end
+  end)
+
+  it("nao sobrescreve o ,pv do venv-selector (regressao: 'PV e PT deu pau')", function()
+    require('user.venv')
+    require('user.minuet')
+    local map = vim.fn.maparg(',pv', 'n', false, true)
+    assert.are.equal(':VenvSelect<CR>', map.rhs)
   end)
 end)

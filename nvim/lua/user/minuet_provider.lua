@@ -21,7 +21,7 @@ function M.resolve(has_gemini, has_claude)
 
   local provider = has_gemini and 'gemini' or 'claude'
   local message = string.format(
-    'só %s disponível (falta a outra API key) -- toggle ,ap desabilitado',
+    'só %s disponível (falta a outra API key) -- toggle ,pr desabilitado',
     provider
   )
   return provider, 'warn', message

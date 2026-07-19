@@ -222,3 +222,24 @@ Execute (UN-028 AdjustSuggestionLines usa tab quando noexpandtab):
   let lines = ['if n <= 1:', '        return n']
   let result = vim_ai_autocomplete#AdjustSuggestionLines(lines, 'def fibonacci(n):', 'python', 4, 0)
   AssertEqual ['', "\tif n <= 1:", '        return n'], result
+
+Execute (UN-029 DescribeAntAuthFailure: credito de API esgotado NAO e reportado como falta de login):
+  let raw = '{"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."}}'
+  let message = vim_ai_autocomplete#DescribeAntAuthFailure(raw)
+  Assert message =~? 'credito', 'deveria mencionar credito, nao falta de login: ' . message
+  Assert message !~? 'auth login', 'nao deveria mandar rodar ant auth login pra um problema de credito: ' . message
+
+Execute (UN-030 DescribeAntAuthFailure: sem resposta (json vazio/invalido) -> assume nao autenticado):
+  AssertEqual 'vim-ai-autocomplete: ant instalado mas nao autenticado -- rode "ant auth login" pra usar credito da assinatura Claude',
+        \ vim_ai_autocomplete#DescribeAntAuthFailure('')
+
+Execute (UN-031 DescribeAntAuthFailure: erro de autenticacao explicito -> pede pra logar):
+  let raw = '{"error":{"message":"Please run ant auth login to authenticate"}}'
+  let message = vim_ai_autocomplete#DescribeAntAuthFailure(raw)
+  Assert message =~? 'auth login', 'deveria pedir pra rodar ant auth login: ' . message
+
+Execute (UN-032 DescribeAntAuthFailure: erro desconhecido -> mostra a mensagem crua, sem inventar causa):
+  let raw = '{"error":{"message":"internal server error, try again later"}}'
+  let message = vim_ai_autocomplete#DescribeAntAuthFailure(raw)
+  Assert message =~# 'internal server error, try again later', 'deveria repassar a mensagem original: ' . message
+  Assert message !~? 'auth login\|credito', 'nao deveria adivinhar causa que nao esta na mensagem: ' . message
