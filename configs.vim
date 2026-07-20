@@ -26,8 +26,8 @@ function! s:LoadApiKeyFromConfig(env_var, path) abort
   endfor
 endfunction
 
-call s:LoadApiKeyFromConfig('GEMINI_API_KEY', '~/.config/gemini/vim-autocomplete.env')
-call s:LoadApiKeyFromConfig('ANTHROPIC_API_KEY', '~/.config/anthropic/vim-autocomplete.env')
+call s:LoadApiKeyFromConfig('GEMINI_API_KEY', '~/.config/gemini/vim-ai-autocomplete.env')
+call s:LoadApiKeyFromConfig('ANTHROPIC_API_KEY', '~/.config/anthropic/vim-ai-autocomplete.env')
 
 " Highlight cursor line
 set cursorline
