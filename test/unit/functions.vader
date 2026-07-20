@@ -158,3 +158,45 @@ Execute (UT-104 StartScreen nao mexe em buffer vazio rodando dentro do Vader):
         \ 'StartScreen desenhou a tela dentro do Vader — guard do exists(":Vader") falhou'
 After:
   bdelete!
+
+" ─────────────────────────────────────────────────────────────────────────────
+" UT-105 a UT-108: s:LoadApiKeyFromConfig() — le chave de API de um arquivo
+" dedicado (~/.config/<provedor>/vim-autocomplete.env) e seta como env var
+" so no processo do Vim (migracao pra fora do ~/.zsh_secrets, 2026-07-20).
+" ─────────────────────────────────────────────────────────────────────────────
+
+Execute (UT-105 LoadApiKeyFromConfig seta a env var quando o arquivo existe com a chave certa):
+  let LoadApiKeyFromConfig = function('<SNR>' . g:configs_sid . '_LoadApiKeyFromConfig')
+  let tmpfile = tempname()
+  call writefile(['UT_TEST_FAKE_KEY=valor-de-teste'], tmpfile)
+  call LoadApiKeyFromConfig('UT_TEST_FAKE_KEY', tmpfile)
+  AssertEqual 'valor-de-teste', $UT_TEST_FAKE_KEY
+After:
+  unlet $UT_TEST_FAKE_KEY
+  call delete(tmpfile)
+
+Execute (UT-106 LoadApiKeyFromConfig nao faz nada se o arquivo nao existe):
+  let LoadApiKeyFromConfig = function('<SNR>' . g:configs_sid . '_LoadApiKeyFromConfig')
+  Assert !exists('$UT_TEST_MISSING_KEY'), 'setup invalido: var ja existia antes do teste'
+  call LoadApiKeyFromConfig('UT_TEST_MISSING_KEY', '/caminho/que/nao/existe/vim-autocomplete.env')
+  Assert !exists('$UT_TEST_MISSING_KEY'), 'nao deveria criar a env var quando o arquivo nao existe'
+
+Execute (UT-107 LoadApiKeyFromConfig ignora linhas que nao batem com a chave pedida):
+  let LoadApiKeyFromConfig = function('<SNR>' . g:configs_sid . '_LoadApiKeyFromConfig')
+  let tmpfile = tempname()
+  call writefile(['OUTRA_CHAVE=nao-deveria-importar'], tmpfile)
+  Assert !exists('$UT_TEST_OTHER_KEY'), 'setup invalido: var ja existia antes do teste'
+  call LoadApiKeyFromConfig('UT_TEST_OTHER_KEY', tmpfile)
+  Assert !exists('$UT_TEST_OTHER_KEY'), 'nao deveria setar a env var pedida a partir de uma linha de outra chave'
+After:
+  call delete(tmpfile)
+
+Execute (UT-108 LoadApiKeyFromConfig preserva o sinal de igual quando o valor tambem contem '='):
+  let LoadApiKeyFromConfig = function('<SNR>' . g:configs_sid . '_LoadApiKeyFromConfig')
+  let tmpfile = tempname()
+  call writefile(['UT_TEST_FAKE_KEY=valor=com=iguais'], tmpfile)
+  call LoadApiKeyFromConfig('UT_TEST_FAKE_KEY', tmpfile)
+  AssertEqual 'valor=com=iguais', $UT_TEST_FAKE_KEY
+After:
+  unlet $UT_TEST_FAKE_KEY
+  call delete(tmpfile)

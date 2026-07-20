@@ -1,3 +1,34 @@
+" Chaves de API (Gemini/Claude, usadas por vim-ai-autocomplete e
+" minuet-ai.nvim) -- um arquivo dedicado por provedor em ~/.config/<provedor>/
+" (dir 0700, arquivo 0600), nao mais export no ~/.zsh_secrets (isso vazava a
+" var pra TODO processo aberto naquele shell). `let $VAR = ...` seta a env
+" var so no processo deste Vim -- e do Neovim tambem, ja que nvim/init.vim
+" da `source ~/.vimrc`, entao um arquivo so cobre os dois lados.
+function! s:LoadApiKeyFromConfig(env_var, path) abort
+  let full_path = expand(a:path)
+  if !filereadable(full_path)
+    return
+  endif
+  for line in readfile(full_path)
+    " stridx/slice em vez de split('=') -- split() quebra em TODA ocorrencia
+    " de '=', nao so a primeira, o que corromperia um valor que contenha
+    " '=' (ex: alguns tokens base64). Isolar so a primeira ocorrencia
+    " preserva o resto do valor intacto.
+    let eq_idx = stridx(line, '=')
+    if eq_idx ==# -1
+      continue
+    endif
+    let key = line[: eq_idx - 1]
+    let value = line[eq_idx + 1 :]
+    if key ==# a:env_var
+      execute 'let $' . a:env_var . ' = ' . string(value)
+    endif
+  endfor
+endfunction
+
+call s:LoadApiKeyFromConfig('GEMINI_API_KEY', '~/.config/gemini/vim-autocomplete.env')
+call s:LoadApiKeyFromConfig('ANTHROPIC_API_KEY', '~/.config/anthropic/vim-autocomplete.env')
+
 " Highlight cursor line
 set cursorline
 
