@@ -94,34 +94,44 @@ Execute (UN-000i FindModelByName: nome nao existe -> v:null):
 Execute (UN-000j FindModelByName: lista vazia -> v:null):
   AssertEqual v:null, vim_ai_autocomplete#FindModelByName([], 'qualquer')
 
-" UN-001 a UN-004: vim_ai_autocomplete#ResolveProvider() -- logica pura,
-" mesma decisao (Gemini padrao, Claude via toggle) ja usada no lado Neovim
-" (nvim/lua/user/minuet_provider.lua).
+" UN-001 a UN-004: vim_ai_autocomplete#ResolveDefaultModel() -- generaliza
+" o antigo ResolveProvider(has_gemini, has_claude) pra N modelos.
 
-Execute (UN-001 ResolveProvider: as duas keys presentes -> gemini, sem aviso):
-  let [provider, level, message] = vim_ai_autocomplete#ResolveProvider(1, 1)
-  AssertEqual 'gemini', provider
+Execute (UN-001 ResolveDefaultModel: 2+ modelos ativos -> primeiro da lista ativa, sem aviso):
+  let all = vim_ai_autocomplete#DefaultModels()
+  let active = [all[0], all[1]]
+  let [name, level, message] = vim_ai_autocomplete#ResolveDefaultModel(all, active)
+  AssertEqual 'gemini', name
   AssertEqual v:null, level
   AssertEqual v:null, message
 
-Execute (UN-002 ResolveProvider: so gemini presente -> gemini, com aviso):
-  let [provider, level, message] = vim_ai_autocomplete#ResolveProvider(1, 0)
-  AssertEqual 'gemini', provider
+Execute (UN-002 ResolveDefaultModel: so 1 modelo ativo -> esse mesmo, com aviso mencionando o nome):
+  let all = vim_ai_autocomplete#DefaultModels()
+  let active = [all[0]]
+  let [name, level, message] = vim_ai_autocomplete#ResolveDefaultModel(all, active)
+  AssertEqual 'gemini', name
   AssertEqual 'warn', level
-  Assert message =~# 'gemini', 'mensagem deveria mencionar gemini'
+  Assert message =~# 'gemini', 'mensagem deveria mencionar o nome do unico modelo ativo'
 
-Execute (UN-003 ResolveProvider: so claude presente -> claude, com aviso):
-  let [provider, level, message] = vim_ai_autocomplete#ResolveProvider(0, 1)
-  AssertEqual 'claude', provider
-  AssertEqual 'warn', level
-  Assert message =~# 'claude', 'mensagem deveria mencionar claude'
-
-Execute (UN-004 ResolveProvider: nenhuma key presente -> erro, sem provider):
-  let [provider, level, message] = vim_ai_autocomplete#ResolveProvider(0, 0)
-  AssertEqual v:null, provider
+Execute (UN-003 ResolveDefaultModel: nenhum modelo ativo -> erro, sem nome, mensagem cita as env vars configuradas):
+  let all = vim_ai_autocomplete#DefaultModels()
+  let [name, level, message] = vim_ai_autocomplete#ResolveDefaultModel(all, [])
+  AssertEqual v:null, name
   AssertEqual 'error', level
   Assert message =~# 'GEMINI_API_KEY', 'mensagem deveria mencionar GEMINI_API_KEY'
   Assert message =~# 'ANTHROPIC_API_KEY', 'mensagem deveria mencionar ANTHROPIC_API_KEY'
+
+Execute (UN-004 ResolveDefaultModel: com 3 modelos configurados, so 1 ativo -> mensagem de erro lista os 3):
+  let all = [
+        \ {'name': 'a', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'ENV_A'},
+        \ {'name': 'b', 'family': 'gemini', 'model_id': 'y', 'api_key_env': 'ENV_B'},
+        \ {'name': 'c', 'family': 'anthropic', 'model_id': 'z', 'api_key_env': 'ENV_C'},
+        \ ]
+  let [name, level, message] = vim_ai_autocomplete#ResolveDefaultModel(all, [])
+  AssertEqual 'error', level
+  Assert message =~# 'ENV_A', 'mensagem deveria citar ENV_A'
+  Assert message =~# 'ENV_B', 'mensagem deveria citar ENV_B'
+  Assert message =~# 'ENV_C', 'mensagem deveria citar ENV_C'
 
 " UN-005 a UN-010: contexto, montagem de request, parsing de resposta.
 " Nenhum destes testes faz chamada de rede real -- so as funcoes puras.
