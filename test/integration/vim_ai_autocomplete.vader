@@ -75,16 +75,28 @@ Execute (IT-002e Accept descarta o fechamento redundante quando a sugestao ja fe
 After:
   bdelete!
 
-Execute (IT-002f ShowSuggestion realca (mesmo highlight do ghost text) o "depois" redundante, pra o preview cinza nao parecer duplicado):
+Execute (IT-002f ShowSuggestion marca o "depois" redundante com highlight PROPRIO (riscado), nao o mesmo do ghost text):
   new
   call setline(1, 'def foo()')
   call cursor(1, 8)
   call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    return a + b'], 1)
   let props = prop_list(1)
-  let highlight_only = filter(copy(props), "get(v:val, 'length', 0) == 1 && v:val.col == 8")
-  Assert !empty(highlight_only), 'esperava um prop de highlight (sem inserir texto) cobrindo o ")" real em col 8'
+  let redundant_prop = filter(copy(props), "v:val.type ==# 'VimAiAutocompleteRedundant' && v:val.col == 8 && get(v:val, 'length', 0) == 1")
+  Assert !empty(redundant_prop), 'esperava o prop VimAiAutocompleteRedundant cobrindo o ")" real em col 8'
+  let ghost_highlight_only = filter(copy(props), "v:val.type ==# 'VimAiAutocompleteSuggestion' && has_key(v:val, 'length')")
+  Assert empty(ghost_highlight_only), 'o tipo do ghost text (implica insercao de texto novo) nao deveria ter nenhum uso highlight-only (sem "text") -- isso e exclusivo do tipo Redundant agora'
 After:
   call vim_ai_autocomplete#ClearSuggestion()
+  bdelete!
+
+Execute (IT-002g ClearSuggestion remove tambem o highlight do "depois" redundante):
+  new
+  call setline(1, 'def foo()')
+  call cursor(1, 8)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    return a + b'], 1)
+  call vim_ai_autocomplete#ClearSuggestion()
+  AssertEqual [], prop_list(1), 'ClearSuggestion deveria remover TODOS os props (ghost text e o highlight redundante)'
+After:
   bdelete!
 
 Execute (IT-002d Accept via mapeamento real de <Tab> nao dispara E565 (mudar buffer durante avaliacao de <expr>)):
