@@ -118,22 +118,41 @@ Execute (IT-002d Accept via mapeamento real de <Tab> nao dispara E565 (mudar buf
 After:
   bdelete!
 
-Execute (IT-003 SetupProviderToggle registra ,pr so com as duas keys):
-  call vim_ai_autocomplete#SetupProviderToggle(1, 1)
+Execute (IT-003 SetupProviderToggle registra ,pr e o comando so com 2+ modelos ativos):
+  let two_models = vim_ai_autocomplete#DefaultModels()
+  call vim_ai_autocomplete#SetupProviderToggle(two_models)
   let map_both = maparg(',pr', 'n', 0, 1)
-  Assert !empty(map_both), ',pr deveria estar registrado com as duas keys presentes'
+  Assert !empty(map_both), ',pr deveria estar registrado com 2+ modelos ativos'
+  Assert exists(':VimAiAutocompleteModel'), ':VimAiAutocompleteModel deveria estar registrado com 2+ modelos ativos'
 
   nunmap ,pr
-  call vim_ai_autocomplete#SetupProviderToggle(1, 0)
+  delcommand VimAiAutocompleteModel
+  call vim_ai_autocomplete#SetupProviderToggle([two_models[0]])
   let map_one = maparg(',pr', 'n', 0, 1)
-  AssertEqual {}, map_one, ',pr NAO deveria estar registrado com so uma key presente'
+  AssertEqual {}, map_one, ',pr NAO deveria estar registrado com so 1 modelo ativo'
+  Assert !exists(':VimAiAutocompleteModel'), ':VimAiAutocompleteModel NAO deveria estar registrado com so 1 modelo ativo'
 
-Execute (IT-004 ToggleProvider alterna entre gemini e claude):
+Execute (IT-004 ToggleProvider cicla pela lista ativa, dando a volta no fim):
   let g:vim_ai_autocomplete_provider = 'gemini'
+  let g:vim_ai_autocomplete_models = [
+        \ {'name': 'gemini', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'IT004_KEY_A'},
+        \ {'name': 'claude', 'family': 'anthropic', 'model_id': 'y', 'api_key_env': 'IT004_KEY_B'},
+        \ {'name': 'terceiro', 'family': 'gemini', 'model_id': 'z', 'api_key_env': 'IT004_KEY_C'},
+        \ ]
+  let $IT004_KEY_A = 'a'
+  let $IT004_KEY_B = 'b'
+  let $IT004_KEY_C = 'c'
   call vim_ai_autocomplete#ToggleProvider()
   AssertEqual 'claude', g:vim_ai_autocomplete_provider
   call vim_ai_autocomplete#ToggleProvider()
-  AssertEqual 'gemini', g:vim_ai_autocomplete_provider
+  AssertEqual 'terceiro', g:vim_ai_autocomplete_provider
+  call vim_ai_autocomplete#ToggleProvider()
+  AssertEqual 'gemini', g:vim_ai_autocomplete_provider, 'deveria dar a volta pro primeiro depois do ultimo'
+After:
+  unlet g:vim_ai_autocomplete_models
+  unlet $IT004_KEY_A
+  unlet $IT004_KEY_B
+  unlet $IT004_KEY_C
 
 Execute (IT-005 SetupEscWrap preserva o comportamento antigo do <Esc> quando nao ha sugestao):
   let original_map = maparg('<Esc>', 'i', 0, 1)
@@ -176,3 +195,66 @@ Execute (IT-009 Trigger nao agenda timer quando auto-trigger esta desligado):
   AssertEqual before, after, 'com auto-trigger desligado, Trigger nao deveria criar nenhum timer novo'
 After:
   let g:vim_ai_autocomplete_auto_trigger = 1
+
+Execute (IT-010 SelectModel: nome valido e ativo troca o provider):
+  let g:vim_ai_autocomplete_provider = 'gemini'
+  let g:vim_ai_autocomplete_models = [
+        \ {'name': 'gemini', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'IT010_KEY_A'},
+        \ {'name': 'claude', 'family': 'anthropic', 'model_id': 'y', 'api_key_env': 'IT010_KEY_B'},
+        \ ]
+  let $IT010_KEY_A = 'a'
+  let $IT010_KEY_B = 'b'
+  call vim_ai_autocomplete#SelectModel('claude')
+  AssertEqual 'claude', g:vim_ai_autocomplete_provider
+After:
+  unlet g:vim_ai_autocomplete_models
+  unlet $IT010_KEY_A
+  unlet $IT010_KEY_B
+
+Execute (IT-011 SelectModel: nome inexistente na config -> erro, nao muda o provider):
+  let g:vim_ai_autocomplete_provider = 'gemini'
+  let g:vim_ai_autocomplete_models = [{'name': 'gemini', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'IT011_KEY_A'}]
+  let $IT011_KEY_A = 'a'
+  let threw = 0
+  try
+    call vim_ai_autocomplete#SelectModel('nao-existe')
+  catch
+    let threw = 1
+  endtry
+  Assert threw, 'SelectModel com nome invalido deveria lancar erro (echoerr)'
+  AssertEqual 'gemini', g:vim_ai_autocomplete_provider, 'provider nao deveria mudar quando o nome e invalido'
+After:
+  unlet g:vim_ai_autocomplete_models
+  unlet $IT011_KEY_A
+
+Execute (IT-012 SelectModel: nome existe na config mas sem key ativa -> erro, nao muda o provider):
+  let g:vim_ai_autocomplete_provider = 'gemini'
+  let g:vim_ai_autocomplete_models = [
+        \ {'name': 'gemini', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'IT012_KEY_A'},
+        \ {'name': 'sem-key', 'family': 'gemini', 'model_id': 'y', 'api_key_env': 'IT012_KEY_QUE_NAO_EXISTE'},
+        \ ]
+  let $IT012_KEY_A = 'a'
+  let threw = 0
+  try
+    call vim_ai_autocomplete#SelectModel('sem-key')
+  catch
+    let threw = 1
+  endtry
+  Assert threw, 'SelectModel pra modelo configurado mas sem key ativa deveria lancar erro'
+  AssertEqual 'gemini', g:vim_ai_autocomplete_provider
+After:
+  unlet g:vim_ai_autocomplete_models
+  unlet $IT012_KEY_A
+
+Execute (IT-013 CompleteModelNames: so sugere nomes ativos, filtrando pelo arglead):
+  let g:vim_ai_autocomplete_models = [
+        \ {'name': 'gemini', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'IT013_KEY_A'},
+        \ {'name': 'gpt-fake', 'family': 'gemini', 'model_id': 'y', 'api_key_env': 'IT013_KEY_SEM_VALOR'},
+        \ ]
+  let $IT013_KEY_A = 'a'
+  AssertEqual ['gemini'], vim_ai_autocomplete#CompleteModelNames('', '', 0)
+  AssertEqual ['gemini'], vim_ai_autocomplete#CompleteModelNames('g', '', 0)
+  AssertEqual [], vim_ai_autocomplete#CompleteModelNames('gpt', '', 0), 'gpt-fake nao esta ativo (sem key), nao deveria aparecer'
+After:
+  unlet g:vim_ai_autocomplete_models
+  unlet $IT013_KEY_A
