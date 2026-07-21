@@ -94,6 +94,36 @@ Execute (UN-000i FindModelByName: nome nao existe -> v:null):
 Execute (UN-000j FindModelByName: lista vazia -> v:null):
   AssertEqual v:null, vim_ai_autocomplete#FindModelByName([], 'qualquer')
 
+Execute (UN-000k ActiveModels: usa g:vim_ai_autocomplete_models quando definida, em vez do default):
+  let $UN_TEST_ACTIVE_KEY = 'valor'
+  let g:vim_ai_autocomplete_models = [{'name': 'custom', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'UN_TEST_ACTIVE_KEY'}]
+  let active = vim_ai_autocomplete#ActiveModels()
+  AssertEqual ['custom'], map(copy(active), 'v:val.name')
+After:
+  if exists('g:vim_ai_autocomplete_models')
+    unlet g:vim_ai_autocomplete_models
+  endif
+  if exists('$UN_TEST_ACTIVE_KEY')
+    unlet $UN_TEST_ACTIVE_KEY
+  endif
+
+Execute (UN-000l ActiveModels: sem g:vim_ai_autocomplete_models definida, usa o default):
+  if exists('g:vim_ai_autocomplete_models')
+    unlet g:vim_ai_autocomplete_models
+  endif
+  let $GEMINI_API_KEY_BACKUP_UN000L = exists('$GEMINI_API_KEY') ? $GEMINI_API_KEY : ''
+  let $GEMINI_API_KEY = 'fake-pra-teste'
+  if exists('$ANTHROPIC_API_KEY')
+    unlet $ANTHROPIC_API_KEY
+  endif
+  let active = vim_ai_autocomplete#ActiveModels()
+  AssertEqual ['gemini'], map(copy(active), 'v:val.name')
+After:
+  if !empty($GEMINI_API_KEY_BACKUP_UN000L)
+    let $GEMINI_API_KEY = $GEMINI_API_KEY_BACKUP_UN000L
+  endif
+  unlet $GEMINI_API_KEY_BACKUP_UN000L
+
 " UN-001 a UN-004: vim_ai_autocomplete#ResolveDefaultModel() -- generaliza
 " o antigo ResolveProvider(has_gemini, has_claude) pra N modelos.
 
