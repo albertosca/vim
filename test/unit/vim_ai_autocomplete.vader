@@ -1,3 +1,99 @@
+" UN-000a a UN-000j: fundacao da config de N modelos -- DefaultModels(),
+" ResolveActiveModels(), FindModelByName(). Substitui o par de booleanos
+" has_gemini/has_claude por uma lista configuravel (ver spec
+" docs/superpowers/specs/2026-07-21-vim-ai-autocomplete-multi-model-design.md).
+
+Execute (UN-000a DefaultModels: dois modelos, gemini e claude, com os model_id atuais):
+  let models = vim_ai_autocomplete#DefaultModels()
+  AssertEqual 2, len(models)
+  AssertEqual 'gemini', models[0].name
+  AssertEqual 'gemini', models[0].family
+  AssertEqual 'gemini-3.1-flash-lite', models[0].model_id
+  AssertEqual 'GEMINI_API_KEY', models[0].api_key_env
+  AssertEqual 'claude', models[1].name
+  AssertEqual 'anthropic', models[1].family
+  AssertEqual 'claude-sonnet-4-5-20250929', models[1].model_id
+  AssertEqual 'ANTHROPIC_API_KEY', models[1].api_key_env
+
+Execute (UN-000b ResolveActiveModels: filtra por env var presente e nao-vazia):
+  let $UN_TEST_KEY_A = 'valor-a'
+  if exists('$UN_TEST_KEY_B')
+    unlet $UN_TEST_KEY_B
+  endif
+  let models = [
+        \ {'name': 'a', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'UN_TEST_KEY_A'},
+        \ {'name': 'b', 'family': 'gemini', 'model_id': 'y', 'api_key_env': 'UN_TEST_KEY_B'},
+        \ ]
+  let [active, warnings] = vim_ai_autocomplete#ResolveActiveModels(models)
+  AssertEqual 1, len(active)
+  AssertEqual 'a', active[0].name
+  AssertEqual [], warnings
+After:
+  unlet $UN_TEST_KEY_A
+
+Execute (UN-000c ResolveActiveModels: env var vazia (setada mas string vazia) NAO conta como presente):
+  let $UN_TEST_KEY_EMPTY = ''
+  let models = [{'name': 'a', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'UN_TEST_KEY_EMPTY'}]
+  let [active, warnings] = vim_ai_autocomplete#ResolveActiveModels(models)
+  AssertEqual [], active
+After:
+  unlet $UN_TEST_KEY_EMPTY
+
+Execute (UN-000d ResolveActiveModels: nenhuma env var presente -> lista ativa vazia):
+  let models = [{'name': 'a', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'UN_TEST_KEY_NUNCA_EXISTE'}]
+  let [active, warnings] = vim_ai_autocomplete#ResolveActiveModels(models)
+  AssertEqual [], active
+  AssertEqual [], warnings
+
+Execute (UN-000e ResolveActiveModels: todas as env vars presentes -> todos ativos, na mesma ordem):
+  let $UN_TEST_KEY_A = 'a'
+  let $UN_TEST_KEY_B = 'b'
+  let $UN_TEST_KEY_C = 'c'
+  let models = [
+        \ {'name': 'a', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'UN_TEST_KEY_A'},
+        \ {'name': 'b', 'family': 'gemini', 'model_id': 'y', 'api_key_env': 'UN_TEST_KEY_B'},
+        \ {'name': 'c', 'family': 'anthropic', 'model_id': 'z', 'api_key_env': 'UN_TEST_KEY_C'},
+        \ ]
+  let [active, warnings] = vim_ai_autocomplete#ResolveActiveModels(models)
+  AssertEqual ['a', 'b', 'c'], map(copy(active), 'v:val.name')
+After:
+  unlet $UN_TEST_KEY_A
+  unlet $UN_TEST_KEY_B
+  unlet $UN_TEST_KEY_C
+
+Execute (UN-000f ResolveActiveModels: nome duplicado -> so a primeira ocorrencia entra, com aviso):
+  let $UN_TEST_KEY_A = 'a'
+  let $UN_TEST_KEY_A2 = 'a2'
+  let models = [
+        \ {'name': 'dup', 'family': 'gemini', 'model_id': 'primeiro', 'api_key_env': 'UN_TEST_KEY_A'},
+        \ {'name': 'dup', 'family': 'gemini', 'model_id': 'segundo', 'api_key_env': 'UN_TEST_KEY_A2'},
+        \ ]
+  let [active, warnings] = vim_ai_autocomplete#ResolveActiveModels(models)
+  AssertEqual 1, len(active)
+  AssertEqual 'primeiro', active[0].model_id
+  AssertEqual 1, len(warnings)
+  Assert warnings[0] =~# 'dup', 'aviso deveria mencionar o nome duplicado'
+After:
+  unlet $UN_TEST_KEY_A
+  unlet $UN_TEST_KEY_A2
+
+Execute (UN-000g ResolveActiveModels: lista vazia -> ativa vazia, sem avisos):
+  let [active, warnings] = vim_ai_autocomplete#ResolveActiveModels([])
+  AssertEqual [], active
+  AssertEqual [], warnings
+
+Execute (UN-000h FindModelByName: acha pelo nome):
+  let models = [{'name': 'a', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'X'}]
+  let found = vim_ai_autocomplete#FindModelByName(models, 'a')
+  AssertEqual 'x', found.model_id
+
+Execute (UN-000i FindModelByName: nome nao existe -> v:null):
+  let models = [{'name': 'a', 'family': 'gemini', 'model_id': 'x', 'api_key_env': 'X'}]
+  AssertEqual v:null, vim_ai_autocomplete#FindModelByName(models, 'nao-existe')
+
+Execute (UN-000j FindModelByName: lista vazia -> v:null):
+  AssertEqual v:null, vim_ai_autocomplete#FindModelByName([], 'qualquer')
+
 " UN-001 a UN-004: vim_ai_autocomplete#ResolveProvider() -- logica pura,
 " mesma decisao (Gemini padrao, Claude via toggle) ja usada no lado Neovim
 " (nvim/lua/user/minuet_provider.lua).
