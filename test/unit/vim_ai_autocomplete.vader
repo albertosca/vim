@@ -41,16 +41,18 @@ Execute (UN-006 BuildContext: trunca respeitando 75/25 quando excede o teto):
   AssertEqual 30, strchars(ctx.before)
   AssertEqual 1, strchars(ctx.after)
 
-Execute (UN-007 BuildGeminiRequest: produz JSON valido com o prompt):
+Execute (UN-007 BuildGeminiRequest: produz JSON valido com o prompt, incluindo o texto DEPOIS do cursor):
   let req = vim_ai_autocomplete#BuildGeminiRequest({'before': 'def foo(', 'after': ')'})
   let decoded = json_decode(req)
-  Assert decoded.contents[0].parts[0].text =~# 'def foo(', 'request deveria conter o contexto'
+  Assert decoded.contents[0].parts[0].text =~# 'def foo(', 'request deveria conter o contexto de antes'
+  Assert decoded.contents[0].parts[0].text =~# ')', 'request deveria conter o contexto de depois (FIM), senao o modelo duplica o que ja existe'
 
-Execute (UN-008 BuildClaudeRequest: produz JSON valido com o model certo):
+Execute (UN-008 BuildClaudeRequest: produz JSON valido com o model certo, incluindo o texto DEPOIS do cursor):
   let req = vim_ai_autocomplete#BuildClaudeRequest({'before': 'def foo(', 'after': ')'}, 'claude-sonnet-4-5-20250929')
   let decoded = json_decode(req)
   AssertEqual 'claude-sonnet-4-5-20250929', decoded.model
-  Assert decoded.messages[0].content =~# 'def foo(', 'request deveria conter o contexto'
+  Assert decoded.messages[0].content =~# 'def foo(', 'request deveria conter o contexto de antes'
+  Assert decoded.messages[0].content =~# 'DEPOIS DO CURSOR', 'request deveria instruir o modelo sobre o texto depois do cursor'
 
 Execute (UN-009 ParseGeminiResponse: extrai as linhas do formato real da API):
   let fake = json_encode({'candidates': [{'content': {'parts': [{'text': "linha1\nlinha2"}]}}]})
@@ -243,3 +245,49 @@ Execute (UN-032 DescribeAntAuthFailure: erro desconhecido -> mostra a mensagem c
   let message = vim_ai_autocomplete#DescribeAntAuthFailure(raw)
   Assert message =~# 'internal server error, try again later', 'deveria repassar a mensagem original: ' . message
   Assert message !~? 'auth login\|credito', 'nao deveria adivinhar causa que nao esta na mensagem: ' . message
+
+Execute (UN-033 ExtractApiErrorMessage: extrai a mensagem de um corpo de erro valido):
+  let raw = '{"type":"error","error":{"type":"invalid_request_error","message":"algo deu errado"}}'
+  AssertEqual 'algo deu errado', vim_ai_autocomplete#ExtractApiErrorMessage(raw)
+
+Execute (UN-034 ExtractApiErrorMessage: string vazia pra JSON invalido ou sem campo error):
+  AssertEqual '', vim_ai_autocomplete#ExtractApiErrorMessage('nao e json')
+  AssertEqual '', vim_ai_autocomplete#ExtractApiErrorMessage('{"candidates":[]}')
+
+Execute (UN-035 DescribeCompletionFailure: resposta com erro da API -> reporta a mensagem, com o nome do provider):
+  let raw = '{"error":{"message":"Your credit balance is too low to access the Anthropic API."}}'
+  let message = vim_ai_autocomplete#DescribeCompletionFailure('claude', 1, raw)
+  Assert message =~# 'claude', 'deveria mencionar o provider: ' . message
+  Assert message =~# 'credit balance', 'deveria repassar a mensagem original da API: ' . message
+
+Execute (UN-036 DescribeCompletionFailure: exit != 0 sem corpo de erro parseavel -> mensagem generica com o codigo):
+  let message = vim_ai_autocomplete#DescribeCompletionFailure('gemini', 7, 'algo que nao e json')
+  Assert message =~# 'gemini', 'deveria mencionar o provider: ' . message
+  Assert message =~# '7', 'deveria mencionar o exit code: ' . message
+
+Execute (UN-037 DescribeCompletionFailure: exit 0 sem erro parseavel -> string vazia, nada pra reportar):
+  AssertEqual '', vim_ai_autocomplete#DescribeCompletionFailure('gemini', 0, '')
+
+Execute (UN-038 TrimSuggestionOverlapWithAfter: remove parenteses duplicado no fim da sugestao):
+  let lines = ['x, y)']
+  let result = vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(lines, ')')
+  AssertEqual ['x, y'], result
+
+Execute (UN-039 TrimSuggestionOverlapWithAfter: sem sobreposicao, nao mexe na sugestao):
+  let lines = ['x, y']
+  let result = vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(lines, ')')
+  AssertEqual ['x, y'], result
+
+Execute (UN-040 TrimSuggestionOverlapWithAfter: sugestao inteira e so repeticao do que ja existe -> lista vazia, nao ['']):
+  let lines = ['):', '    pass']
+  let result = vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(lines, "):\n    pass")
+  AssertEqual [], result
+
+Execute (UN-041 TrimSuggestionOverlapWithAfter: sobreposicao parcial multi-linha):
+  let lines = ['return x', '}']
+  let result = vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(lines, "}\nmore code after")
+  AssertEqual ['return x'], result
+
+Execute (UN-042 TrimSuggestionOverlapWithAfter: lista ou texto de depois vazios -> retorna a sugestao intacta):
+  AssertEqual ['a', 'b'], vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(['a', 'b'], '')
+  AssertEqual [], vim_ai_autocomplete#TrimSuggestionOverlapWithAfter([], ')')
