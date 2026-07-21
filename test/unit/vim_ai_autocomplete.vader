@@ -122,72 +122,27 @@ Execute (UN-015 ClearSuggestion usa a linha salva, nao a posicao atual do cursor
 After:
   bdelete!
 
-" UN-016 a UN-020: vim_ai_autocomplete#BuildClaudeCommand() -- decide entre
-" rotear via `ant` (assinatura, OAuth) ou via curl cru (ANTHROPIC_API_KEY
-" estatica). Puramente testavel: nao precisa do `ant` instalado nem de
-" chamada de rede -- so passa has_ant_authenticated como bool direto.
+" UN-016 a UN-017: vim_ai_autocomplete#BuildClaudeCommand() -- so via curl
+" cru com ANTHROPIC_API_KEY estatica. `ant` foi removido 2026-07-20 (nao
+" tinha vantagem de billing pro caso de uso deste plugin -- cobra do mesmo
+" credito de API pago por token que a key estatica, so muda a forma de
+" autenticar; ver [[project-neovim-setup-backlog]]).
 
-Execute (UN-016 BuildClaudeCommand via ant: monta comando ant, corpo vai por stdin):
+Execute (UN-016 BuildClaudeCommand: monta comando curl com a key certa):
   let ctx = {'before': 'def foo(', 'after': ')'}
-  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 1, '')
-  AssertEqual ['ant', 'messages', 'create', '--model', 'claude-sonnet-4-5-20250929', '--max-tokens', '256', '--format', 'json'], result.cmd
-  Assert !empty(result.stdin), 'stdin deveria conter o corpo JSON quando o caminho e via ant'
+  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 'sk-ant-fake123')
+  AssertEqual 'curl', result[0]
+  AssertEqual 'x-api-key: sk-ant-fake123', result[6]
 
-Execute (UN-017 BuildClaudeCommand via ant: stdin e JSON valido com o contexto certo):
+Execute (UN-017 BuildClaudeCommand: endpoint, headers e corpo corretos):
   let ctx = {'before': 'def foo(', 'after': ')'}
-  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 1, '')
-  let decoded = json_decode(result.stdin)
+  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 'chave')
+  AssertEqual 'https://api.anthropic.com/v1/messages', result[4]
+  Assert index(result, 'anthropic-version: 2023-06-01') >= 0
+  let body_idx = index(result, '-d') + 1
+  let decoded = json_decode(result[body_idx])
   AssertEqual 'claude-sonnet-4-5-20250929', decoded.model
   Assert decoded.messages[0].content =~# 'def foo(', 'corpo deveria conter o contexto'
-
-Execute (UN-018 BuildClaudeCommand via curl: monta comando curl com a key, sem stdin):
-  let ctx = {'before': 'def foo(', 'after': ')'}
-  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 0, 'sk-ant-fake123')
-  AssertEqual 'curl', result.cmd[0]
-  AssertEqual 'x-api-key: sk-ant-fake123', result.cmd[6]
-  AssertEqual '', result.stdin
-
-Execute (UN-019 BuildClaudeCommand via curl: endpoint e headers corretos):
-  let ctx = {'before': 'x', 'after': 'y'}
-  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 0, 'chave')
-  AssertEqual 'https://api.anthropic.com/v1/messages', result.cmd[4]
-  Assert index(result.cmd, 'anthropic-version: 2023-06-01') >= 0
-
-Execute (UN-020 BuildClaudeCommand: has_ant_authenticated=1 ignora a api_key recebida):
-  let ctx = {'before': 'z', 'after': ''}
-  let result = vim_ai_autocomplete#BuildClaudeCommand(ctx, 'claude-sonnet-4-5-20250929', 1, 'chave-que-nao-deveria-aparecer')
-  Assert index(result.cmd, 'chave-que-nao-deveria-aparecer') < 0, 'caminho via ant nao deveria referenciar a api_key estatica no comando'
-
-" UN-021 a UN-022: vim_ai_autocomplete#RunWithoutAnthropicKey() -- garante que
-" a env var some durante a chamada e volta ao estado exato de antes depois
-" (setada com o valor original, OU continua ausente se nunca existiu).
-
-Execute (UN-021 RunWithoutAnthropicKey remove a key durante a chamada e restaura o valor original depois):
-  let $ANTHROPIC_API_KEY = 'valor-original'
-  let seen_during = vim_ai_autocomplete#RunWithoutAnthropicKey({-> $ANTHROPIC_API_KEY})
-  AssertEqual '', seen_during, 'durante a chamada, a key nao deveria estar visivel'
-  AssertEqual 'valor-original', $ANTHROPIC_API_KEY, 'depois, a key deveria voltar ao valor original'
-
-Execute (UN-022 RunWithoutAnthropicKey nao deixa a key setada se ela nunca existiu):
-  if exists('$ANTHROPIC_API_KEY')
-    unlet $ANTHROPIC_API_KEY
-  endif
-  call vim_ai_autocomplete#RunWithoutAnthropicKey({-> 0})
-  AssertEqual 0, exists('$ANTHROPIC_API_KEY'), 'se a key nunca existiu, nao deveria existir depois tambem'
-
-Execute (UN-023 RunWithoutAnthropicKey restaura a key mesmo se Fn lancar excecao, e a excecao propaga):
-  let $ANTHROPIC_API_KEY = 'valor-original'
-  function! s:ThrowError() abort
-    throw 'erro-de-teste'
-  endfunction
-  let threw = 0
-  try
-    call vim_ai_autocomplete#RunWithoutAnthropicKey(function('s:ThrowError'))
-  catch /erro-de-teste/
-    let threw = 1
-  endtry
-  AssertEqual 1, threw, 'a excecao deveria propagar pro chamador, nao ser engolida'
-  AssertEqual 'valor-original', $ANTHROPIC_API_KEY, 'a key deveria ser restaurada mesmo com excecao'
 
 " UN-024 a UN-028: vim_ai_autocomplete#AdjustSuggestionLines() -- corrige o
 " caso (confirmado real, reproduzivel 3/3 com gemini-3.1-flash-lite) onde a
@@ -224,27 +179,6 @@ Execute (UN-028 AdjustSuggestionLines usa tab quando noexpandtab):
   let lines = ['if n <= 1:', '        return n']
   let result = vim_ai_autocomplete#AdjustSuggestionLines(lines, 'def fibonacci(n):', 'python', 4, 0)
   AssertEqual ['', "\tif n <= 1:", '        return n'], result
-
-Execute (UN-029 DescribeAntAuthFailure: credito de API esgotado NAO e reportado como falta de login):
-  let raw = '{"type":"error","error":{"type":"invalid_request_error","message":"Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits."}}'
-  let message = vim_ai_autocomplete#DescribeAntAuthFailure(raw)
-  Assert message =~? 'credito', 'deveria mencionar credito, nao falta de login: ' . message
-  Assert message !~? 'auth login', 'nao deveria mandar rodar ant auth login pra um problema de credito: ' . message
-
-Execute (UN-030 DescribeAntAuthFailure: sem resposta (json vazio/invalido) -> assume nao autenticado):
-  AssertEqual 'vim-ai-autocomplete: ant instalado mas nao autenticado -- rode "ant auth login" pra usar credito da assinatura Claude',
-        \ vim_ai_autocomplete#DescribeAntAuthFailure('')
-
-Execute (UN-031 DescribeAntAuthFailure: erro de autenticacao explicito -> pede pra logar):
-  let raw = '{"error":{"message":"Please run ant auth login to authenticate"}}'
-  let message = vim_ai_autocomplete#DescribeAntAuthFailure(raw)
-  Assert message =~? 'auth login', 'deveria pedir pra rodar ant auth login: ' . message
-
-Execute (UN-032 DescribeAntAuthFailure: erro desconhecido -> mostra a mensagem crua, sem inventar causa):
-  let raw = '{"error":{"message":"internal server error, try again later"}}'
-  let message = vim_ai_autocomplete#DescribeAntAuthFailure(raw)
-  Assert message =~# 'internal server error, try again later', 'deveria repassar a mensagem original: ' . message
-  Assert message !~? 'auth login\|credito', 'nao deveria adivinhar causa que nao esta na mensagem: ' . message
 
 Execute (UN-033 ExtractApiErrorMessage: extrai a mensagem de um corpo de erro valido):
   let raw = '{"type":"error","error":{"type":"invalid_request_error","message":"algo deu errado"}}'
