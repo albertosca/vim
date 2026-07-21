@@ -202,29 +202,25 @@ Execute (UN-036 DescribeCompletionFailure: exit != 0 sem corpo de erro parseavel
 Execute (UN-037 DescribeCompletionFailure: exit 0 sem erro parseavel -> string vazia, nada pra reportar):
   AssertEqual '', vim_ai_autocomplete#DescribeCompletionFailure('gemini', 0, '')
 
-Execute (UN-038 TrimSuggestionOverlapWithAfter: remove parenteses duplicado no fim da sugestao):
+Execute (UN-038 ComputeTextOverlapLength: acha a sobreposicao no fim da sugestao):
   let lines = ['x, y)']
-  let result = vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(lines, ')')
-  AssertEqual ['x, y'], result
+  AssertEqual 1, vim_ai_autocomplete#ComputeTextOverlapLength(lines, ')')
 
-Execute (UN-039 TrimSuggestionOverlapWithAfter: sem sobreposicao, nao mexe na sugestao):
+Execute (UN-039 ComputeTextOverlapLength: sem sobreposicao -> 0):
   let lines = ['x, y']
-  let result = vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(lines, ')')
-  AssertEqual ['x, y'], result
+  AssertEqual 0, vim_ai_autocomplete#ComputeTextOverlapLength(lines, ')')
 
-Execute (UN-040 TrimSuggestionOverlapWithAfter: sugestao inteira e so repeticao do que ja existe -> lista vazia, nao ['']):
+Execute (UN-040 ComputeTextOverlapLength: sugestao inteira e so repeticao do que ja existe -> sobreposicao = tamanho todo):
   let lines = ['):', '    pass']
-  let result = vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(lines, "):\n    pass")
-  AssertEqual [], result
+  AssertEqual 11, vim_ai_autocomplete#ComputeTextOverlapLength(lines, "):\n    pass")
 
-Execute (UN-041 TrimSuggestionOverlapWithAfter: sobreposicao parcial multi-linha):
+Execute (UN-041 ComputeTextOverlapLength: sobreposicao parcial multi-linha):
   let lines = ['return x', '}']
-  let result = vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(lines, "}\nmore code after")
-  AssertEqual ['return x'], result
+  AssertEqual 1, vim_ai_autocomplete#ComputeTextOverlapLength(lines, "}\nmore code after")
 
-Execute (UN-042 TrimSuggestionOverlapWithAfter: lista ou texto de depois vazios -> retorna a sugestao intacta):
-  AssertEqual ['a', 'b'], vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(['a', 'b'], '')
-  AssertEqual [], vim_ai_autocomplete#TrimSuggestionOverlapWithAfter([], ')')
+Execute (UN-042 ComputeTextOverlapLength: lista ou texto de depois vazios -> 0):
+  AssertEqual 0, vim_ai_autocomplete#ComputeTextOverlapLength(['a', 'b'], '')
+  AssertEqual 0, vim_ai_autocomplete#ComputeTextOverlapLength([], ')')
 
 Execute (UN-043 SplitLinesAtCursor: corta a linha atual na coluna do cursor, nao manda ela inteira pros dois lados):
   let [before, after] = vim_ai_autocomplete#SplitLinesAtCursor(['linha anterior'], 'def soma()', 10, ['linha seguinte'])
