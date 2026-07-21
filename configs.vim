@@ -29,6 +29,17 @@ endfunction
 call s:LoadApiKeyFromConfig('GEMINI_API_KEY', '~/.config/gemini/vim-ai-autocomplete.env')
 call s:LoadApiKeyFromConfig('ANTHROPIC_API_KEY', '~/.config/anthropic/vim-ai-autocomplete.env')
 
+" Modelos do vim-ai-autocomplete (,pr cicla, :VimAiAutocompleteModel <nome>
+" seleciona direto) -- nomes descritivos em vez do default generico
+" 'gemini'/'claude'. claude-sonnet-5 e claude-haiku-4-5 confirmados como
+" IDs validos via chamada real (2026-07-21 -- erro foi so credito de API
+" zerado, nao "modelo desconhecido", que a API acusaria antes do billing).
+let g:vim_ai_autocomplete_models = [
+      \ {'name': 'gemini-flash', 'family': 'gemini', 'model_id': 'gemini-3.1-flash-lite', 'api_key_env': 'GEMINI_API_KEY'},
+      \ {'name': 'claude-sonnet', 'family': 'anthropic', 'model_id': 'claude-sonnet-5', 'api_key_env': 'ANTHROPIC_API_KEY'},
+      \ {'name': 'claude-haiku', 'family': 'anthropic', 'model_id': 'claude-haiku-4-5', 'api_key_env': 'ANTHROPIC_API_KEY'},
+      \ ]
+
 " Highlight cursor line
 set cursorline
 
