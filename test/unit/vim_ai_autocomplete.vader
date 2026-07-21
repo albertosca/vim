@@ -462,3 +462,25 @@ Execute (UN-053 CountRedundantAfterChars: mistura parenteses e aspas -- print("|
 
 Execute (UN-054 CountRedundantAfterChars: aspa dentro da sugestao que NAO fecha nada aberto antes -> nao mexe):
   AssertEqual 0, vim_ai_autocomplete#CountRedundantAfterChars('foo(', '"bar"', ')')
+
+" UN-055 a UN-058: cursor ANTES do proprio abre-parenteses (nao dentro do
+" par ja aberto) -- "antes" nao tem nenhum bracket pendente (depth 0), e a
+" sugestao, sem saber que o par vazio ja existe em "depois", escreve sua
+" PROPRIA versao completa. Achado real, reportado pelo Alberto 2026-07-21
+" (def quicksort()/mergesort() com cursor ANTES do "(", nao entre os dois
+" parenteses -- log de debug g:vim_ai_autocomplete_debug confirmou
+" depth_before=0, a:after='()' intacto, redundant_after=0 pelos dois
+" mecanismos ja existentes): "def quicksort" + sugestao "(arr):" + "()"
+" intacto = "def quicksort(arr):()" -- par vazio original sobra no final.
+
+Execute (UN-055 CountRedundantAfterChars: cursor antes do abre-parenteses, sugestao escreve o proprio par -> par vazio original fica redundante):
+  AssertEqual 2, vim_ai_autocomplete#CountRedundantAfterChars('def quicksort', '(arr):', '()')
+
+Execute (UN-056 CountRedundantAfterChars: mesmo caso com colchete):
+  AssertEqual 2, vim_ai_autocomplete#CountRedundantAfterChars('items', '[x, y]', '[]')
+
+Execute (UN-057 CountRedundantAfterChars: "depois" nao e um par vazio de verdade (tem conteudo entre os dois) -> nao mexe):
+  AssertEqual 0, vim_ai_autocomplete#CountRedundantAfterChars('def quicksort', '(arr):', '(x)')
+
+Execute (UN-058 CountRedundantAfterChars: sugestao nao usa esse tipo de bracket -> nao arrisca, retorna 0):
+  AssertEqual 0, vim_ai_autocomplete#CountRedundantAfterChars('def quicksort', 'pass', '()')
