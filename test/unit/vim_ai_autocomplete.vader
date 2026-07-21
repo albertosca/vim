@@ -255,3 +255,18 @@ Execute (UN-049 CountRedundantAfterChars: multiplos niveis fechados pela sugesta
 
 Execute (UN-050 CountRedundantAfterChars: sugestao abre e fecha o proprio parenteses -> nao mexe no que ja existia antes):
   AssertEqual 0, vim_ai_autocomplete#CountRedundantAfterChars('foo(', 'bar(1, 2)', ')')
+
+" UN-051 a UN-054: CountRedundantAfterChars com aspas (g:AutoPairs tambem
+" fecha ' " ` -- simetricas, alternam em vez de empilhar tipo diferente).
+
+Execute (UN-051 CountRedundantAfterChars: sugestao fecha a aspa dupla aberta antes -> aspa real fica redundante):
+  AssertEqual 1, vim_ai_autocomplete#CountRedundantAfterChars('name = "', 'John"', '"')
+
+Execute (UN-052 CountRedundantAfterChars: sugestao fecha a aspa simples aberta antes):
+  AssertEqual 1, vim_ai_autocomplete#CountRedundantAfterChars("name = '", "John'", "'")
+
+Execute (UN-053 CountRedundantAfterChars: mistura parenteses e aspas -- print("|") com sugestao que fecha os dois):
+  AssertEqual 2, vim_ai_autocomplete#CountRedundantAfterChars('print("', 'ola")', '")')
+
+Execute (UN-054 CountRedundantAfterChars: aspa dentro da sugestao que NAO fecha nada aberto antes -> nao mexe):
+  AssertEqual 0, vim_ai_autocomplete#CountRedundantAfterChars('foo(', '"bar"', ')')
