@@ -291,3 +291,33 @@ Execute (UN-041 TrimSuggestionOverlapWithAfter: sobreposicao parcial multi-linha
 Execute (UN-042 TrimSuggestionOverlapWithAfter: lista ou texto de depois vazios -> retorna a sugestao intacta):
   AssertEqual ['a', 'b'], vim_ai_autocomplete#TrimSuggestionOverlapWithAfter(['a', 'b'], '')
   AssertEqual [], vim_ai_autocomplete#TrimSuggestionOverlapWithAfter([], ')')
+
+Execute (UN-043 SplitLinesAtCursor: corta a linha atual na coluna do cursor, nao manda ela inteira pros dois lados):
+  let [before, after] = vim_ai_autocomplete#SplitLinesAtCursor(['linha anterior'], 'def soma()', 10, ['linha seguinte'])
+  AssertEqual ['linha anterior', 'def soma('], before
+  AssertEqual [')', 'linha seguinte'], after
+
+Execute (UN-044 SplitLinesAtCursor: cursor na coluna 1 (inicio da linha)):
+  let [before, after] = vim_ai_autocomplete#SplitLinesAtCursor([], 'foo', 1, [])
+  AssertEqual [''], before
+  AssertEqual ['foo'], after
+
+Execute (UN-045 SplitLinesAtCursor: cursor apos o ultimo caractere (fim da linha)):
+  let [before, after] = vim_ai_autocomplete#SplitLinesAtCursor([], 'foo', 4, [])
+  AssertEqual ['foo'], before
+  AssertEqual [''], after
+
+Execute (UN-046 CountRedundantAfterChars: sugestao fecha o parenteses aberto antes -> ")" real fica redundante):
+  AssertEqual 1, vim_ai_autocomplete#CountRedundantAfterChars('def soma(', "a, b):\n    return a + b", ')')
+
+Execute (UN-047 CountRedundantAfterChars: sugestao nao fecha nada aberto antes -> nada redundante):
+  AssertEqual 0, vim_ai_autocomplete#CountRedundantAfterChars('foo', 'bar', ')')
+
+Execute (UN-048 CountRedundantAfterChars: "depois" nao comeca com fechamento -> nao arrisca, retorna 0):
+  AssertEqual 0, vim_ai_autocomplete#CountRedundantAfterChars('def soma(', 'a, b)', 'algo_que_nao_e_fechamento')
+
+Execute (UN-049 CountRedundantAfterChars: multiplos niveis fechados pela sugestao):
+  AssertEqual 2, vim_ai_autocomplete#CountRedundantAfterChars('foo([', '])', '])')
+
+Execute (UN-050 CountRedundantAfterChars: sugestao abre e fecha o proprio parenteses -> nao mexe no que ja existia antes):
+  AssertEqual 0, vim_ai_autocomplete#CountRedundantAfterChars('foo(', 'bar(1, 2)', ')')

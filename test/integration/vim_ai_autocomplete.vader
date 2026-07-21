@@ -59,6 +59,22 @@ Execute (IT-002c Accept preserva o texto depois do cursor, movendo-o pro fim da 
 After:
   bdelete!
 
+Execute (IT-002e Accept descarta o fechamento redundante quando a sugestao ja fecha o proprio parenteses):
+  " Simula "def foo(" com cursor entre os parenteses que o auto-pairs ja
+  " inseriu (achado real, reportado pelo Alberto: "def soma(a, b):\n
+  " return a + b)" -- o ")" real sobrava no fim).
+  call vim_ai_autocomplete#SetupTabWrap()
+  new
+  call setline(1, 'def foo()')
+  call cursor(1, 8)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    return a + b'], 1)
+  call feedkeys("a\<Tab>\<Esc>", 'x')
+  sleep 10m
+  AssertEqual ['def foo(a, b):', '    return a + b'], getline(1, 2),
+        \ 'o ")" real (redundant_after=1) deveria ser descartado, nao duplicado no fim'
+After:
+  bdelete!
+
 Execute (IT-002d Accept via mapeamento real de <Tab> nao dispara E565 (mudar buffer durante avaliacao de <expr>)):
   call vim_ai_autocomplete#SetupTabWrap()
   new
