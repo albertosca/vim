@@ -75,6 +75,18 @@ Execute (IT-002e Accept descarta o fechamento redundante quando a sugestao ja fe
 After:
   bdelete!
 
+Execute (IT-002f ShowSuggestion realca (mesmo highlight do ghost text) o "depois" redundante, pra o preview cinza nao parecer duplicado):
+  new
+  call setline(1, 'def foo()')
+  call cursor(1, 8)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    return a + b'], 1)
+  let props = prop_list(1)
+  let highlight_only = filter(copy(props), "get(v:val, 'length', 0) == 1 && v:val.col == 8")
+  Assert !empty(highlight_only), 'esperava um prop de highlight (sem inserir texto) cobrindo o ")" real em col 8'
+After:
+  call vim_ai_autocomplete#ClearSuggestion()
+  bdelete!
+
 Execute (IT-002d Accept via mapeamento real de <Tab> nao dispara E565 (mudar buffer durante avaliacao de <expr>)):
   call vim_ai_autocomplete#SetupTabWrap()
   new
