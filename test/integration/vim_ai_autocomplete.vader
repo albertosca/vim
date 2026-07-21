@@ -99,6 +99,37 @@ Execute (IT-002g ClearSuggestion remove tambem o highlight do "depois" redundant
 After:
   bdelete!
 
+Execute (IT-002h Trigger invalida a sugestao visivel se o cursor se moveu pra longe de onde ela foi mostrada):
+  " Achado real, reportado pelo Alberto: mover o cursor com as setas antes
+  " de aceitar (Tab) corrompia o buffer -- "def mergesortarr):" (o "("
+  " sumiu, sobrou um ")" extra no fim). Causa raiz: Trigger() (chamado a
+  " cada CursorMovedI) so reiniciava o debounce, nunca invalidava a
+  " sugestao ja visivel -- aceitar uma sugestao calculada pra uma posicao
+  " diferente da atual insere tudo no lugar errado.
+  new
+  call setline(1, 'def foo()')
+  call cursor(1, 8)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    return a + b'], 1)
+  Assert vim_ai_autocomplete#IsVisible(), 'setup invalido: sugestao deveria estar visivel'
+  " simula o cursor se movendo (ex: seta pra esquerda) pra ANTES do "("
+  call cursor(1, 7)
+  call vim_ai_autocomplete#Trigger()
+  AssertEqual 0, vim_ai_autocomplete#IsVisible(), 'Trigger deveria invalidar a sugestao quando o cursor sai de onde ela foi mostrada'
+After:
+  bdelete!
+
+Execute (IT-002i Trigger NAO invalida a sugestao se o cursor continua na mesma posicao):
+  new
+  call setline(1, 'def foo()')
+  call cursor(1, 8)
+  call vim_ai_autocomplete#ShowSuggestion(['a, b):', '    return a + b'], 1)
+  " cursor nao se moveu -- Trigger so deveria reiniciar o debounce, nao
+  " limpar a sugestao ja mostrada
+  call vim_ai_autocomplete#Trigger()
+  Assert vim_ai_autocomplete#IsVisible(), 'Trigger nao deveria invalidar a sugestao quando o cursor NAO se moveu'
+After:
+  bdelete!
+
 Execute (IT-002d Accept via mapeamento real de <Tab> nao dispara E565 (mudar buffer durante avaliacao de <expr>)):
   call vim_ai_autocomplete#SetupTabWrap()
   new
