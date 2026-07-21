@@ -250,6 +250,42 @@ Execute (UN-017 BuildClaudeCommand: endpoint, headers e corpo corretos):
   AssertEqual 'claude-sonnet-4-5-20250929', decoded.model
   Assert decoded.messages[0].content =~# 'def foo(', 'corpo deveria conter o contexto'
 
+" UN-018 a UN-022: BuildGeminiCommand + FamilyHandler -- despacho por familia
+" de API (Gemini vs Anthropic Claude).
+
+Execute (UN-018 BuildGeminiCommand: monta comando curl com endpoint e model_id certos):
+  let ctx = {'before': 'def foo(', 'after': ')'}
+  let result = vim_ai_autocomplete#BuildGeminiCommand(ctx, 'gemini-3.1-flash-lite', 'minha-chave')
+  AssertEqual 'curl', result[0]
+  Assert result[4] =~# 'gemini-3\.1-flash-lite', 'endpoint deveria conter o model_id'
+  Assert result[4] =~# 'key=minha-chave', 'endpoint deveria conter a api key'
+
+Execute (UN-019 BuildGeminiCommand: corpo contem o contexto):
+  let ctx = {'before': 'def foo(', 'after': ')'}
+  let result = vim_ai_autocomplete#BuildGeminiCommand(ctx, 'gemini-3.1-flash-lite', 'chave')
+  let body_idx = index(result, '-d') + 1
+  let decoded = json_decode(result[body_idx])
+  Assert decoded.contents[0].parts[0].text =~# 'def foo(', 'corpo deveria conter o contexto'
+
+Execute (UN-020 FamilyHandler: familia "gemini" devolve BuildGeminiCommand + ParseGeminiResponse):
+  let handler = vim_ai_autocomplete#FamilyHandler('gemini')
+  AssertEqual function('vim_ai_autocomplete#BuildGeminiCommand'), handler.build_command
+  AssertEqual function('vim_ai_autocomplete#ParseGeminiResponse'), handler.parse_response
+
+Execute (UN-021 FamilyHandler: familia "anthropic" devolve BuildClaudeCommand + ParseClaudeResponse):
+  let handler = vim_ai_autocomplete#FamilyHandler('anthropic')
+  AssertEqual function('vim_ai_autocomplete#BuildClaudeCommand'), handler.build_command
+  AssertEqual function('vim_ai_autocomplete#ParseClaudeResponse'), handler.parse_response
+
+Execute (UN-022 FamilyHandler: familia desconhecida -> lanca excecao clara):
+  let threw = 0
+  try
+    call vim_ai_autocomplete#FamilyHandler('openai-nao-existe')
+  catch /familia desconhecida/
+    let threw = 1
+  endtry
+  AssertEqual 1, threw, 'deveria lancar excecao mencionando "familia desconhecida"'
+
 " UN-024 a UN-028: vim_ai_autocomplete#AdjustSuggestionLines() -- corrige o
 " caso (confirmado real, reproduzivel 3/3 com gemini-3.1-flash-lite) onde a
 " primeira linha da sugestao vem sem quebra de linha nem indentacao quando
