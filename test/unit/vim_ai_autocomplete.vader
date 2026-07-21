@@ -124,6 +124,30 @@ After:
   endif
   unlet $GEMINI_API_KEY_BACKUP_UN000L
 
+Execute (UN-000m ActiveModels: config com nome duplicado nao lanca excecao, retorna a lista deduplicada):
+  let $UN_TEST_DUP_KEY_A = 'a'
+  let $UN_TEST_DUP_KEY_B = 'b'
+  let g:vim_ai_autocomplete_models = [
+        \ {'name': 'dup', 'family': 'gemini', 'model_id': 'primeiro', 'api_key_env': 'UN_TEST_DUP_KEY_A'},
+        \ {'name': 'dup', 'family': 'gemini', 'model_id': 'segundo', 'api_key_env': 'UN_TEST_DUP_KEY_B'},
+        \ ]
+  let threw = 0
+  let active = []
+  try
+    let active = vim_ai_autocomplete#ActiveModels()
+  catch
+    let threw = 1
+  endtry
+  AssertEqual 0, threw, 'ActiveModels() NAO deveria lancar excecao so porque ResolveActiveModels retornou avisos'
+  AssertEqual 1, len(active)
+  AssertEqual 'primeiro', active[0].model_id
+After:
+  if exists('g:vim_ai_autocomplete_models')
+    unlet g:vim_ai_autocomplete_models
+  endif
+  unlet $UN_TEST_DUP_KEY_A
+  unlet $UN_TEST_DUP_KEY_B
+
 " UN-001 a UN-004: vim_ai_autocomplete#ResolveDefaultModel() -- generaliza
 " o antigo ResolveProvider(has_gemini, has_claude) pra N modelos.
 
