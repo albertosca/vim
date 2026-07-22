@@ -30,6 +30,30 @@ describe("vim-ai-autocomplete.keymaps.tab_handler", function()
     -- em vez de envolver com nvim_eval() (que da E15 num tab literal).
     assert.are.equal('\t', keymaps.tab_handler())
   end)
+
+  it("sem sugestao visivel, com mapeamento <expr> classico original: avalia o rhs", function()
+    -- Simula um mapeamento <expr> classico (rhs Vimscript, sem callback
+    -- Lua) preexistente -- ex: outro plugin que faz
+    -- `inoremap <expr> <Tab> '"literal"'`. setup_tab_wrap() deve capturar
+    -- esse rhs e is_expr=true; tab_handler() precisa avaliar o rhs via
+    -- nvim_eval() e retornar o resultado.
+    vim.keymap.set('i', '<Tab>', '"literal"', { expr = true })
+    keymaps.setup_tab_wrap()
+    assert.are.equal('literal', keymaps.tab_handler())
+    vim.keymap.del('i', '<Tab>')
+  end)
+
+  it("sem sugestao visivel, com mapeamento <expr> baseado em callback Lua: chama o callback e retorna seu resultado", function()
+    -- Simula algo como blink.cmp: mapeamento <expr> cujo rhs e um
+    -- callback Lua (sem 'rhs' classico). setup_tab_wrap() captura
+    -- callback + is_expr=true; tab_handler() deve chamar o callback e,
+    -- por ser is_expr=true, retornar o resultado DELE (nao ''), batendo
+    -- com a semantica do Vimscript: `s:tab_fallback_is_expr ? result : ''`.
+    vim.keymap.set('i', '<Tab>', function() return 'from-callback' end, { expr = true })
+    keymaps.setup_tab_wrap()
+    assert.are.equal('from-callback', keymaps.tab_handler())
+    vim.keymap.del('i', '<Tab>')
+  end)
 end)
 
 describe("vim-ai-autocomplete.keymaps.complete_model_names", function()
