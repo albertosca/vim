@@ -65,7 +65,11 @@ Pathogen continua cuidando de tudo que é compartilhado com o Vim (`~/.vim_runti
 
 **Só Neovim, sem equivalente no Vim:**
 
-`nvim-treesitter` (+ `-textobjects`, `-context`), `telescope.nvim`, `nvim-dap` (+ `-ui`, `-go`, `-python`, `-ruby`, `-vscode-js`), `render-markdown.nvim`, `glow.nvim`, `flash.nvim`, `harpoon2`, `trouble.nvim`, `diffview.nvim`, `venv-selector.nvim`, `minuet-ai.nvim` (autocomplete inline via Gemini/Claude).
+`nvim-treesitter` (+ `-textobjects`, `-context`), `telescope.nvim`, `nvim-dap` (+ `-ui`, `-go`, `-python`, `-ruby`, `-vscode-js`), `render-markdown.nvim`, `glow.nvim`, `flash.nvim`, `harpoon2`, `trouble.nvim`, `diffview.nvim`, `venv-selector.nvim`.
+
+**Compartilhado via port Lua (não é Pathogen, mas existe nos dois):**
+
+`vim-ai-autocomplete` — autocomplete inline via Gemini/Claude (ghost text). Plugin próprio, com um port nativo em Lua pro Neovim (`,pt`/`,pr`/`,pm`/`:VimAiAutocompleteModel` — ver `docs/keybindings.md` seção 23) e a versão original em Vimscript pro Vim (seção 26). Substituiu o `minuet-ai.nvim`, removido de vez (usava `,ap`/`,at` e uma key em `~/.zsh_secrets`).
 
 **Só Vim, adicionado durante a migração mas útil pros dois (Pathogen, compartilhado):**
 
@@ -166,4 +170,4 @@ Além dos requisitos do [`setup.md`](setup.md), o Neovim precisa de:
 | Go | `gopls`, `sqls`, `nvim-dap-go` (via `go install`) | `brew install go` |
 | Ruby ≥3.1 | `ruby-lsp`, `rdbg` (ver Pendências acima) | `brew install ruby` (keg-only — precisa do PATH manual) |
 | Node.js | `typescript-tools.nvim`, `js-debug-adapter`, `eslint-lsp`, etc. | Já usado pelo CoC no Vim — mesmo Node |
-| `GEMINI_API_KEY` (`~/.config/gemini/vim-ai-autocomplete.env`) / `ANTHROPIC_API_KEY` (`~/.config/anthropic/vim-ai-autocomplete.env`) | `minuet-ai.nvim` (autocomplete inline Gemini/Claude) — precisa de pelo menos uma; as duas habilitam o toggle `,pr` | Gemini: [aistudio.google.com](https://aistudio.google.com/apikey). Claude: [console.anthropic.com](https://console.anthropic.com/) (billing por API, diferente da assinatura do Claude Code) |
+| `GEMINI_API_KEY` (`~/.config/gemini/vim-ai-autocomplete.env`) / `ANTHROPIC_API_KEY` (`~/.config/anthropic/vim-ai-autocomplete.env`) | `vim-ai-autocomplete` (autocomplete inline Gemini/Claude, port Neovim — ver `docs/keybindings.md` seção 23) — precisa de pelo menos uma; 2+ habilitam o toggle `,pr`/`,pm` | Gemini: [aistudio.google.com](https://aistudio.google.com/apikey). Claude: [console.anthropic.com](https://console.anthropic.com/) (billing por API, diferente da assinatura do Claude Code) |

@@ -71,6 +71,46 @@ describe("vim-ai-autocomplete.keymaps.tab_handler", function()
   end)
 end)
 
+describe("vim-ai-autocomplete.keymaps.esc_handler", function()
+  local buf
+
+  before_each(function()
+    buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_set_current_buf(buf)
+    ghost_text.clear_suggestion()
+  end)
+
+  after_each(function()
+    ghost_text.clear_suggestion()
+    vim.api.nvim_buf_delete(buf, { force = true })
+  end)
+
+  it("sem sugestao visivel, com mapeamento <expr> baseado em callback Lua: chama o callback e retorna seu resultado", function()
+    -- Espelha o teste equivalente de tab_handler: mapeamento <expr> cujo
+    -- rhs e um callback Lua (sem 'rhs' classico). setup_esc_wrap() precisa
+    -- capturar esc_fallback.callback + is_expr=true; esc_handler() deve
+    -- chamar o callback e, por ser is_expr=true, retornar o resultado DELE
+    -- (nao ''), mesma semantica do tab_handler ja corrigido.
+    vim.keymap.set('i', '<Esc>', function() return 'from-callback' end, { expr = true })
+    keymaps.setup_esc_wrap()
+    assert.are.equal('from-callback', keymaps.esc_handler())
+    vim.keymap.del('i', '<Esc>')
+  end)
+
+  it("sem sugestao visivel, com mapeamento NAO-<expr> baseado em callback Lua: nao retorna o resultado do callback", function()
+    -- Espelha o teste equivalente de tab_handler: mapeamento de <Esc>
+    -- baseado em callback Lua que NAO e <expr>. setup_esc_wrap() captura
+    -- callback + is_expr=false; esc_handler() NAO pode retornar o
+    -- resultado do callback nesse caso -- precisa retornar '' como
+    -- qualquer outro fallback nao-expr, gateado por is_expr (distingue o
+    -- fix do bug antigo de return incondicional).
+    vim.keymap.set('i', '<Esc>', function() return 'should-not-leak-into-buffer' end)
+    keymaps.setup_esc_wrap()
+    assert.are.equal('', keymaps.esc_handler())
+    vim.keymap.del('i', '<Esc>')
+  end)
+end)
+
 describe("vim-ai-autocomplete.keymaps.complete_model_names", function()
   it("filtra pelo prefixo literal (nao regex)", function()
     vim.g.vim_ai_autocomplete_models = {
