@@ -100,3 +100,27 @@ describe("vim-ai-autocomplete.keymaps.setup_provider_toggle", function()
     assert.are.equal('', map.lhs or '')
   end)
 end)
+
+describe("vim-ai-autocomplete.keymaps.open_model_picker", function()
+  it("chama vim.ui.select com os nomes dos modelos ativos e seleciona o escolhido", function()
+    vim.g.vim_ai_autocomplete_models = {
+      { name = 'gemini-flash', family = 'gemini', model_id = 'x', api_key_env = 'VAA_TEST_KEY_A' },
+      { name = 'claude-sonnet', family = 'anthropic', model_id = 'y', api_key_env = 'VAA_TEST_KEY_A' },
+    }
+    vim.fn.setenv('VAA_TEST_KEY_A', 'x')
+    local original_select = vim.ui.select
+    local captured_items
+    vim.ui.select = function(items, _, on_choice)
+      captured_items = items
+      on_choice(items[2])
+    end
+
+    keymaps.open_model_picker()
+
+    assert.are.same({ 'gemini-flash', 'claude-sonnet' }, captured_items)
+    assert.are.equal('claude-sonnet', vim.g.vim_ai_autocomplete_provider)
+
+    vim.ui.select = original_select
+    vim.g.vim_ai_autocomplete_models = nil
+  end)
+end)
