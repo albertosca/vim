@@ -54,6 +54,21 @@ describe("vim-ai-autocomplete.keymaps.tab_handler", function()
     assert.are.equal('from-callback', keymaps.tab_handler())
     vim.keymap.del('i', '<Tab>')
   end)
+
+  it("sem sugestao visivel, com mapeamento NAO-<expr> baseado em callback Lua: nao retorna o resultado do callback", function()
+    -- Simula um mapeamento de <Tab> baseado em callback Lua que NAO e
+    -- <expr> (ex: `vim.keymap.set('i', '<Tab>', function() ... end)` sem
+    -- { expr = true }). setup_tab_wrap() captura callback + is_expr=false;
+    -- tab_handler() NAO pode retornar o resultado do callback nesse caso
+    -- (ele nao foi desenhado pra ser usado como valor de expr map e
+    -- vazaria texto pro buffer) -- precisa retornar '' como qualquer outro
+    -- fallback nao-expr. Distingue o fix (gate por is_expr) do bug antigo
+    -- (return incondicional de tab_fallback.callback()).
+    vim.keymap.set('i', '<Tab>', function() return 'should-not-leak-into-buffer' end)
+    keymaps.setup_tab_wrap()
+    assert.are.equal('', keymaps.tab_handler())
+    vim.keymap.del('i', '<Tab>')
+  end)
 end)
 
 describe("vim-ai-autocomplete.keymaps.complete_model_names", function()
