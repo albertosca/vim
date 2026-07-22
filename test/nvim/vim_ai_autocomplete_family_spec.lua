@@ -25,6 +25,20 @@ describe("vim-ai-autocomplete.family.parse_gemini_response", function()
   it("resposta sem candidates -> lista vazia", function()
     assert.are.same({}, family.parse_gemini_response('{}'))
   end)
+
+  -- candidate bloqueado (filtro de seguranca, finishReason SAFETY/RECITATION)
+  -- vem sem "content" ou sem "parts" -- resposta HTTP 200 legitima, so sem
+  -- sugestao. Achado real, reportado pelo Alberto 2026-07-22 (smoke test ao
+  -- vivo): "attempt to index field 'parts' (a nil value)".
+  it('candidate sem "content" (bloqueado por filtro de seguranca) -> lista vazia, sem erro', function()
+    local body = vim.json.encode({ candidates = { { finishReason = 'SAFETY' } } })
+    assert.are.same({}, family.parse_gemini_response(body))
+  end)
+
+  it('candidate com "content" mas sem "parts" -> lista vazia, sem erro', function()
+    local body = vim.json.encode({ candidates = { { content = { role = 'model' }, finishReason = 'RECITATION' } } })
+    assert.are.same({}, family.parse_gemini_response(body))
+  end)
 end)
 
 describe("vim-ai-autocomplete.family.parse_claude_response", function()

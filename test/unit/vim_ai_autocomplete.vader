@@ -218,6 +218,21 @@ Execute (UN-009 ParseGeminiResponse: extrai as linhas do formato real da API):
   let fake = json_encode({'candidates': [{'content': {'parts': [{'text': "linha1\nlinha2"}]}}]})
   AssertEqual ['linha1', 'linha2'], vim_ai_autocomplete#ParseGeminiResponse(fake)
 
+" UN-009a/b: candidate bloqueado (ex: filtro de seguranca, finishReason
+" SAFETY/RECITATION) vem SEM "content" ou sem "parts" -- resposta HTTP 200
+" legitima, so sem sugestao de verdade. Achado real, reportado pelo Alberto
+" 2026-07-22 (smoke test ao vivo do port Neovim): "attempt to index field
+" 'parts' (a nil value)" -- o acesso direto data.candidates[0].content.parts[0]
+" lancava excecao Lua quando content/parts nao existem. Confirmado o MESMO
+" bug (sem guarda) no lado Vim -- corrigido nos dois lados juntos.
+Execute (UN-009a ParseGeminiResponse: candidate sem "content" (bloqueado por filtro de seguranca) -> lista vazia, sem erro):
+  let fake = json_encode({'candidates': [{'finishReason': 'SAFETY'}]})
+  AssertEqual [], vim_ai_autocomplete#ParseGeminiResponse(fake)
+
+Execute (UN-009b ParseGeminiResponse: candidate com "content" mas sem "parts" -> lista vazia, sem erro):
+  let fake = json_encode({'candidates': [{'content': {'role': 'model'}, 'finishReason': 'RECITATION'}]})
+  AssertEqual [], vim_ai_autocomplete#ParseGeminiResponse(fake)
+
 Execute (UN-010 ParseClaudeResponse: extrai as linhas do formato real da API):
   let fake = json_encode({'content': [{'text': "linhaA\nlinhaB\nlinhaC"}]})
   AssertEqual ['linhaA', 'linhaB', 'linhaC'], vim_ai_autocomplete#ParseClaudeResponse(fake)
