@@ -62,5 +62,8 @@ lua require('user.glow')
 lua require('user.venv')
 lua require('user.typescript')
 
-" Autocomplete inline (ghost text) via Gemini/Claude
-lua require('user.minuet')
+" Autocomplete inline (ghost text) via Gemini/Claude -- porte nativo do
+" plugins/vim-ai-autocomplete/ do lado Vim (ver
+" docs/superpowers/specs/2026-07-21-vim-ai-autocomplete-nvim-port-design.md).
+" Substitui minuet-ai.nvim (third-party, sem os bugfixes construidos aqui).
+lua require('vim-ai-autocomplete').setup()
