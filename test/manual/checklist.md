@@ -97,29 +97,36 @@ na seção "Histórico de execuções" ao final.
 
 ## vim-ai-autocomplete — ghost-text Gemini/Claude (Vim clássico)
 
-**Pré-requisito:** `GEMINI_API_KEY` em `~/.zsh_secrets` (já configurado). `ANTHROPIC_API_KEY` opcional — sem ela, `,ap` não deveria nem aparecer (comportamento esperado, não é bug).
+Agora um plugin standalone publicado em [albertosca/vim-ai-autocomplete](https://github.com/albertosca/vim-ai-autocomplete), consumido aqui via submodule (`plugins/vim-ai-autocomplete/`).
+
+**Pré-requisito:** `GEMINI_API_KEY` em `~/.config/gemini/vim-ai-autocomplete.env` (já configurado, carregado por `s:LoadApiKeyFromConfig` em `configs.vim`). `ANTHROPIC_API_KEY` em `~/.config/anthropic/vim-ai-autocomplete.env`, opcional — com só um modelo ativo, `,pr` não deveria nem se registrar (comportamento esperado, não é bug). Modelos configurados em `g:vim_ai_autocomplete_models` (`configs.vim`): `gemini-flash`, `claude-sonnet`, `claude-haiku`.
 
 - [ ] **E2E-060** — Abrir um arquivo de código real (`.py`/`.ex`/`.js`), digitar uma linha incompleta (ex: `def soma(a, b):`), parar de digitar por ~1s → sugestão cinza aparece (ghost text, não um menu)
 - [ ] **E2E-061** — `Tab` com a sugestão visível → aceita o texto de verdade (deixa de ser cinza), cursor avança pro fim do texto inserido
 - [ ] **E2E-062** — Sugestão multi-linha (peça algo que gere 2-3 linhas, ex: início de uma função) → `Tab` insere TODAS as linhas corretamente, com quebra de linha real (não tudo numa linha só)
+- [ ] **E2E-062b** — Digitar `def quicksort(` com cursor ANTES do `(` que o auto-pairs já inseriu (não entre os parênteses) → aceitar não deixa um `()` vazio sobrando no final (fix de 2026-07-21)
 - [ ] **E2E-063** — Com a sugestão visível, apertar `Esc` → sugestão some sem deixar nenhum caractere/lixo no buffer; `:w` + reabrir o arquivo confirma que nada vazou pro arquivo salvo
 - [ ] **E2E-064** — **Sem nenhuma sugestão visível**, `Tab` continua funcionando exatamente como antes (CoC): se o menu de completion do CoC estiver aberto, `Tab` navega pro próximo item; em posição normal, insere tab/aciona completion como sempre
 - [ ] **E2E-065** — Digitar rápido sem pausar → NÃO deveria disparar sugestão a cada tecla (debounce funcionando, sem lag perceptível na digitação)
-- [ ] **E2E-066** — Se `ANTHROPIC_API_KEY` estiver configurada: `,ap` alterna entre Gemini e Claude (mensagem confirma a troca); pedir uma sugestão depois do toggle deveria vir do provider ativo (diferença de "personalidade" da sugestão é um bom sinal, não uma prova rígida)
-- [ ] **E2E-067** — Sem `ANTHROPIC_API_KEY`: `,ap` não faz nada / não está mapeado (esperado — confirma que o toggle é condicional)
+- [ ] **E2E-066** — Com 2+ modelos ativos: `,pr` cicla entre eles (mensagem `vim-ai-autocomplete: provider agora e <nome>` confirma); pedir uma sugestão depois do toggle deveria vir do modelo ativo
+- [ ] **E2E-066b** — Trocar pra um modelo sem crédito de API → aviso de erro aparece, mas o modelo NÃO reverte sozinho (fix de 2026-07-22: dá pra continuar ciclando à vontade com `,pr`/`:VimAiAutocompleteModel`)
+- [ ] **E2E-067** — Com só 1 modelo ativo: `,pr` não faz nada / não está mapeado (esperado — confirma que o toggle é condicional)
 - [ ] **E2E-068** — Editar dois arquivos diferentes intercalado (trocar de buffer no meio de esperar uma sugestão) → nenhuma sugestão "vaza" pro buffer errado
 
-## minuet-ai.nvim — ghost-text Gemini/Claude (Neovim)
+## vim-ai-autocomplete — ghost-text Gemini/Claude (Neovim, port nativo)
 
-**Pré-requisito:** mesmas API keys do item acima (`~/.zsh_secrets`, compartilhadas entre os dois editores).
+Mesmo projeto do item acima (não é mais o `minuet-ai.nvim` de terceiros, removido em 2026-07-22) — porte Lua nativo do mesmo plugin, `require('vim-ai-autocomplete').setup()` em `nvim/init.vim`.
 
-- [ ] **E2E-069** — Mesmo teste do E2E-060, agora no `nvim` — sugestão ghost-text aparece depois da pausa
-- [ ] **E2E-070** — `Ctrl+y` aceita a sugestão (multi-linha incluso)
-- [ ] **E2E-071** — `Ctrl+e` dispensa a sugestão sem deixar lixo
-- [ ] **E2E-072** — `,at` liga/desliga o auto-trigger — com ele desligado, sugestão só aparece se invocada manualmente (ver docs do minuet pro comando manual, se quiser testar esse caminho)
-- [ ] **E2E-073** — Se `ANTHROPIC_API_KEY` estiver configurada: `,ap` alterna Gemini/Claude (mensagem `Minuet Provider changed to: ...` confirma)
-- [ ] **E2E-074** — Sem `ANTHROPIC_API_KEY`: `,ap` não está mapeado (mesmo comportamento condicional do lado Vim)
+**Pré-requisito:** mesmas API keys do item acima (`~/.config/<provider>/vim-ai-autocomplete.env`, compartilhadas entre os dois editores).
+
+- [ ] **E2E-069** — Mesmo teste do E2E-060, agora no `nvim` — sugestão ghost-text aparece depois da pausa (via extmarks, não textprop)
+- [ ] **E2E-070** — `Tab` aceita a sugestão (multi-linha incluso)
+- [ ] **E2E-071** — `Esc` dispensa a sugestão sem deixar lixo
+- [ ] **E2E-072** — `,pt` liga/desliga o auto-trigger — com ele desligado, sugestão só aparece se invocada manualmente
+- [ ] **E2E-073** — Com 2+ modelos ativos: `,pr` cicla (mensagem `vim-ai-autocomplete: provider agora e <nome>` confirma); `,pm` abre um picker via `vim.ui.select` com a mesma lista
+- [ ] **E2E-074** — Com só 1 modelo ativo: `,pr`/`,pm` não estão mapeados (mesmo comportamento condicional do lado Vim)
 - [ ] **E2E-075** — Digitar em um buffer, trocar de janela/buffer no meio da espera → sem sugestão vazando pro lugar errado (mesmo espírito do E2E-068)
+- [ ] **E2E-076** — Cursor dentro de uma função que chama outra definida em outro arquivo do mesmo projeto (com LSP ativo, ex: pyright) → sem erro, sem lentidão perceptível (contexto cross-file via Treesitter+LSP é best-effort, timeout de 150ms)
 
 ---
 
