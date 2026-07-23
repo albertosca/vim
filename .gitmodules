@@ -168,3 +168,6 @@
 [submodule "plugins/vim-ai-autocomplete/test/vendor/vader.vim"]
 	path = plugins/vim-ai-autocomplete/test/vendor/vader.vim
 	url = https://github.com/junegunn/vader.vim
+[submodule "plugins/vim-ai-autocomplete/test/vendor/plenary.nvim"]
+	path = plugins/vim-ai-autocomplete/test/vendor/plenary.nvim
+	url = https://github.com/nvim-lua/plenary.nvim
