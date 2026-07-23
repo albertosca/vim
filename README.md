@@ -204,6 +204,7 @@ Este config faz parte de um setup maior:
 | **[albertosca/vim](https://github.com/albertosca/vim)** | Este repo — config Vim com Pathogen + CoC |
 | **[albertosca/tmux](https://github.com/albertosca/tmux)** | Config tmux complementar |
 | **[albertosca/vim-tutorial](https://github.com/albertosca/vim-tutorial)** | Tutorial interativo Vim + tmux para devs |
+| **[albertosca/vim-ai-autocomplete](https://github.com/albertosca/vim-ai-autocomplete)** | Autocomplete de IA (ghost-text, multi-modelo) — usado por este repo via submodule |
 
 ## Créditos
 
