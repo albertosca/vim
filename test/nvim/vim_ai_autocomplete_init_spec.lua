@@ -46,3 +46,31 @@ describe("vim-ai-autocomplete.setup", function()
     assert.is_not_nil(map.callback)
   end)
 end)
+
+describe("vim-ai-autocomplete.setup com opts", function()
+  after_each(function()
+    vim.g.vim_ai_autocomplete_models = nil
+    vim.g.vim_ai_autocomplete_auto_trigger = nil
+    vim.g.vim_ai_autocomplete_provider = nil
+  end)
+
+  it("opts.models seta vim.g.vim_ai_autocomplete_models", function()
+    local models_list = { { name = 'a', family = 'gemini', model_id = 'x', api_key_env = 'VAA_TEST_KEY_SETUP' } }
+    vai.setup({ models = models_list })
+    assert.are.same(models_list, vim.g.vim_ai_autocomplete_models)
+  end)
+
+  it("opts.auto_trigger = false vira vim.g.vim_ai_autocomplete_auto_trigger = 0", function()
+    vai.setup({ auto_trigger = false })
+    assert.are.equal(0, vim.g.vim_ai_autocomplete_auto_trigger)
+  end)
+
+  it("sem opts.auto_trigger, mantem o default 1", function()
+    vai.setup({})
+    assert.are.equal(1, vim.g.vim_ai_autocomplete_auto_trigger)
+  end)
+
+  it("chamar setup() sem argumento nenhum continua funcionando (nil opts)", function()
+    assert.has_no.errors(function() vai.setup() end)
+  end)
+end)
