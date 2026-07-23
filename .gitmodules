@@ -165,3 +165,6 @@
 	path = plugins/vim-table-mode
 	url = https://github.com/dhruvasagar/vim-table-mode
 	ignore = dirty
+[submodule "plugins/vim-ai-autocomplete/test/vendor/vader.vim"]
+	path = plugins/vim-ai-autocomplete/test/vendor/vader.vim
+	url = https://github.com/junegunn/vader.vim
